@@ -12,6 +12,9 @@ data.js
 !data.sample.js
 .codexscope-cache.json
 .codexscope-cache.json.stamp
+.codexscope-server.log
+.codexscope-server.pid
+.codex-backups/
 codexscope-generator
 codexscope-generator.exe
 codexscope-darwin-arm64

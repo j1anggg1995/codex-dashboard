@@ -10,6 +10,9 @@
         currency: "USD",
         trendMode: "cumulative",
         trendScale: "linear",
+        privacyMode: false,
+        costVisible: true,
+        fxEnabled: true,
         trendSeries: {
             total: true,
             cached: true,
@@ -19,7 +22,8 @@
         },
     };
     const $ = (id) => document.getElementById(id);
-    const pct = (value) => `${Math.max(0, Math.min(100, Number(value) || 0)).toFixed(0)}%`;
+    const clamp = (value, min = 0, max = 100) => Math.max(min, Math.min(max, Number(value) || 0));
+    const pct = (value) => `${clamp(value).toFixed(0)}%`;
     const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({
         "&": "&amp;",
         "<": "&lt;",
@@ -48,9 +52,12 @@
     let distributionRows = [];
     let sessionRows = data.sessions || [];
     let modelRows = data.models || [];
+    let projectRows = [];
     let costModelRows = [];
     let riskRows = data.risk || [];
     let costSummary = {};
+    let decisionSummary = {};
+    let performanceSummary = {};
     const fxState = {
         usdCny: 6.8012,
         date: "2026-05-08",
@@ -137,6 +144,33 @@
         if (Math.abs(value) >= 1e3)
             return `${Math.round(value / 1e3)}K`;
         return `${Math.round(value)}`;
+    };
+    const fmtMs = (value) => {
+        const ms = Number(value) || 0;
+        if (ms <= 0)
+            return "--";
+        if (ms >= 1000)
+            return `${(ms / 1000).toFixed(ms >= 10000 ? 1 : 2)}s`;
+        return `${Math.round(ms)}ms`;
+    };
+    const fmtRate = (value) => {
+        const rate = Number(value) || 0;
+        if (rate >= 1000)
+            return `${(rate / 1000).toFixed(1)}K/s`;
+        if (rate >= 100)
+            return `${rate.toFixed(0)}/s`;
+        if (rate >= 10)
+            return `${rate.toFixed(1)}/s`;
+        return `${rate.toFixed(2)}/s`;
+    };
+    const fmtDuration = (value) => {
+        const ms = Math.max(0, Number(value) || 0);
+        const minutes = ms / 60000;
+        if (minutes >= 60)
+            return `${(minutes / 60).toFixed(1)} 小时`;
+        if (minutes >= 1)
+            return `${minutes.toFixed(minutes >= 10 ? 0 : 1)} 分钟`;
+        return `${Math.max(1, Math.round(ms / 1000))} 秒`;
     };
     const convertCost = (value) => {
         const amount = Number(value) || 0;
@@ -261,6 +295,8 @@
         return { start, end, preset: "custom", label: formatRangeLabel(start, end, "custom") };
     };
     const emptyUsage = () => ({ input: 0, cached: 0, output: 0, reasoning: 0, total: 0, requests: 0, cost: 0 });
+    const privateLabel = (kind, index = 1) => `${kind} ${String(index).padStart(2, "0")}`;
+    const displayName = (value, kind, index = 1) => uiState.privacyMode ? privateLabel(kind, index) : String(value || privateLabel(kind, index));
     const buildBuckets = (filtered, range) => {
         // Bucket count is adaptive: short ranges stay detailed, long ranges stay
         // light enough for a static file opened directly in the browser.
@@ -312,6 +348,30 @@
             tpm: peakTotal / (RATE_WINDOW_MS / 60000),
         };
     };
+    const computePeakOutputRate = (filtered, range) => {
+        let left = 0;
+        let sum = 0;
+        let peakOutput = 0;
+        let peakTs = NaN;
+        for (let right = 0; right < filtered.length; right += 1) {
+            const current = filtered[right];
+            const currentTs = recordTime(current);
+            sum += Number(current[5]) || 0;
+            while (left <= right && currentTs - recordTime(filtered[left]) >= RATE_WINDOW_MS) {
+                sum -= Number(filtered[left][5]) || 0;
+                left += 1;
+            }
+            if (sum > peakOutput) {
+                peakOutput = sum;
+                peakTs = currentTs;
+            }
+        }
+        return {
+            output: peakOutput,
+            label: formatPeakLabel(peakTs, range),
+            tps: peakOutput / (RATE_WINDOW_MS / 1000),
+        };
+    };
     const computeStats = (range) => {
         // All date-filtered views are derived from compact local records here.
         // No network request is needed to switch ranges or ranking modes.
@@ -322,6 +382,17 @@
         const costs = emptyCost();
         const bySession = new Map();
         const byModel = new Map();
+        const byProject = new Map();
+        const failureBySession = new Map();
+        for (const failure of failures) {
+            const sid = failure[1] || "unknown";
+            failureBySession.set(sid, (failureBySession.get(sid) || 0) + 1);
+            const catalog = sessionsCatalog[sid] || {};
+            const projectName = catalog.name || `会话 ${String(sid).slice(-6)}`;
+            const project = byProject.get(projectName) || { name: projectName, tokens: 0, requests: 0, failures: 0, cost: 0, input: 0, cached: 0 };
+            project.failures += 1;
+            byProject.set(projectName, project);
+        }
         for (const record of filtered) {
             const recordCost = priceRecord(record);
             addCost(costs, recordCost);
@@ -334,31 +405,44 @@
             const sid = record[1] || "unknown";
             const model = record[2] || "unknown";
             const catalog = sessionsCatalog[sid] || {};
-            const session = bySession.get(sid) || { name: catalog.name || `会话 ${sid.slice(-6)}`, model, tokens: 0, requests: 0, status: "ok" };
+            const projectName = catalog.name || `会话 ${String(sid).slice(-6)}`;
+            const session = bySession.get(sid) || { name: projectName, model, tokens: 0, requests: 0, failures: failureBySession.get(sid) || 0, status: "ok" };
             session.tokens += record[7] || 0;
             session.requests += 1;
+            session.status = session.failures ? "warn" : "ok";
             bySession.set(sid, session);
-            const modelRow = byModel.get(model) || { name: model, tokens: 0, requests: 0, cost: 0, latencyTotal: 0, latencyCount: 0 };
+            const project = byProject.get(projectName) || { name: projectName, tokens: 0, requests: 0, failures: 0, cost: 0, input: 0, cached: 0 };
+            project.tokens += record[7] || 0;
+            project.requests += 1;
+            project.cost += recordCost.total || 0;
+            project.input += record[3] || 0;
+            project.cached += record[4] || 0;
+            byProject.set(projectName, project);
+            const modelRow = byModel.get(model) || { name: model, tokens: 0, output: 0, requests: 0, cost: 0, latencyTotal: 0, latencyCount: 0 };
             modelRow.tokens += record[7] || 0;
+            modelRow.output += record[5] || 0;
             modelRow.requests += 1;
             modelRow.cost += recordCost.total || 0;
             byModel.set(model, modelRow);
         }
         for (const record of ttfb) {
             const model = record[2] || "unknown";
-            const modelRow = byModel.get(model) || { name: model, tokens: 0, requests: 0, cost: 0, latencyTotal: 0, latencyCount: 0 };
+            const modelRow = byModel.get(model) || { name: model, tokens: 0, output: 0, requests: 0, cost: 0, latencyTotal: 0, latencyCount: 0 };
             modelRow.latencyTotal += record[3] || 0;
             modelRow.latencyCount += 1;
             byModel.set(model, modelRow);
         }
         const buckets = buildBuckets(filtered, range);
         const peak = computePeakRate(filtered, range);
+        const peakOutput = computePeakOutputRate(filtered, range);
         const cacheHit = totals.input ? totals.cached / totals.input * 100 : 0;
         const failureRate = totals.requests ? failures.length / totals.requests * 100 : 0;
         const successRate = totals.requests ? Math.max(0, (totals.requests - failures.length) / totals.requests * 100) : 100;
         const sessions = Array.from(bySession.values());
+        const projects = Array.from(byProject.values()).sort((a, b) => b.tokens - a.tokens || b.requests - a.requests).slice(0, 6);
         const maxSessionTokens = Math.max(1, ...sessions.map((row) => row.tokens));
         const maxSessionRequests = Math.max(1, ...sessions.map((row) => row.requests));
+        const maxProjectTokens = Math.max(1, ...projects.map((row) => row.tokens));
         const models = Array.from(byModel.values()).sort((a, b) => b.tokens - a.tokens).slice(0, 12);
         const maxModelTokens = Math.max(1, ...models.map((row) => row.tokens));
         const costModels = Array.from(byModel.values()).sort((a, b) => b.cost - a.cost).slice(0, 4);
@@ -371,6 +455,161 @@
         ].map((part) => ({
             ...part,
             percent: costs.total ? part.value / costs.total * 100 : 0,
+        }));
+        const topProject = projects[0] || null;
+        const primaryUsed = Number(limits.primaryUsed);
+        const secondaryUsed = Number(limits.secondaryUsed);
+        const maxLimitUsed = Math.max(Number.isFinite(primaryUsed) ? primaryUsed : 0, Number.isFinite(secondaryUsed) ? secondaryUsed : 0);
+        let riskText = hasLimitData ? "安全" : "未知";
+        let riskTone = hasLimitData ? "safe" : "neutral";
+        let riskNote = hasLimitData ? `最高额度已用 ${pct(maxLimitUsed)}` : "本地日志暂无额度数据";
+        if (limits.rateLimitReachedType || maxLimitUsed >= 90) {
+            riskText = "危险";
+            riskTone = "danger";
+            riskNote = limits.rateLimitReachedType ? "已经触发限流" : `最高额度已用 ${pct(maxLimitUsed)}`;
+        }
+        else if (maxLimitUsed >= 70 || failureRate >= 5) {
+            riskText = "注意";
+            riskTone = "warn";
+            riskNote = failureRate >= 5 ? `失败率 ${failureRate.toFixed(1)}%` : `最高额度已用 ${pct(maxLimitUsed)}`;
+        }
+        let wasteText = "暂无明显浪费";
+        let wasteNote = "当前范围运行稳定";
+        if (failureRate >= 5) {
+            wasteText = "失败率偏高";
+            wasteNote = `${failures.length} 次失败，建议先看失败会话`;
+        }
+        else if (totals.input > 0 && cacheHit < 45) {
+            wasteText = "缓存偏低";
+            wasteNote = `缓存命中 ${cacheHit.toFixed(1)}%，重复上下文可能偏少`;
+        }
+        else if (peak.total > 0 && totals.total > 0 && peak.total / totals.total > 0.38) {
+            wasteText = "峰值集中";
+            wasteNote = `${peak.label} 占用峰值 ${fmt(peak.total)}`;
+        }
+        let actionText = "继续观察";
+        let actionNote = "当前没有必须立刻处理的风险";
+        if (riskTone === "danger") {
+            actionText = "降低强度";
+            actionNote = "暂停高并发任务，优先处理必要会话";
+        }
+        else if (riskTone === "warn") {
+            actionText = "切小模型";
+            actionNote = "接近额度时优先使用 mini 或轻量模型";
+        }
+        else if (topProject && topProject.tokens / Math.max(1, totals.total) > 0.55) {
+            actionText = "检查项目";
+            actionNote = `${topProject.name} 占比偏高，适合先优化提示和上下文`;
+        }
+        const ttfbValues = ttfb
+            .map((row) => Number(row[3]) || 0)
+            .filter((value) => value > 0)
+            .sort((a, b) => a - b);
+        const ttfbCount = ttfbValues.length;
+        const avgTtfb = ttfbCount ? ttfbValues.reduce((sum, value) => sum + value, 0) / ttfbCount : 0;
+        const p95Ttfb = ttfbCount ? ttfbValues[Math.min(ttfbCount - 1, Math.ceil(ttfbCount * 0.95) - 1)] : 0;
+        const bestTtfb = ttfbCount ? ttfbValues[0] : 0;
+        const medianTtfb = ttfbCount
+            ? ttfbCount % 2
+                ? ttfbValues[(ttfbCount - 1) / 2]
+                : (ttfbValues[ttfbCount / 2 - 1] + ttfbValues[ttfbCount / 2]) / 2
+            : 0;
+        const slowThresholdMs = 15000;
+        const slowCount = ttfbValues.filter((value) => value >= slowThresholdMs).length;
+        const slowRate = ttfbCount ? slowCount / ttfbCount * 100 : 0;
+        const firstTs = recordTime(filtered[0]);
+        const lastTs = recordTime(filtered[filtered.length - 1]);
+        const activeMs = filtered.length > 1 ? Math.max(RATE_WINDOW_MS, lastTs - firstTs) : RATE_WINDOW_MS;
+        const avgOutputTps = totals.output / Math.max(1, activeMs / 1000);
+        const avgOutputPerMinute = avgOutputTps * 60;
+        const avgOutputPerRequest = totals.requests ? totals.output / totals.requests : 0;
+        const ttfbSpread = medianTtfb ? p95Ttfb / medianTtfb : 0;
+        let speedStatus = "缺少测速";
+        let speedNote = "当前日志没有首 token 字段，仅展示输出吞吐估算。";
+        if (ttfbCount) {
+            speedStatus = avgTtfb <= 8000 ? "响应很快" : avgTtfb <= 15000 ? "响应正常" : "响应偏慢";
+            speedNote = slowCount
+                ? `${slowCount} 次首 token 超过 ${fmtMs(slowThresholdMs)}，建议关注对应模型或网络。`
+                : "首 token 波动可控，输出吞吐按活跃窗口估算。";
+        }
+        const waitScore = ttfbCount
+            ? avgTtfb <= 6000
+                ? 100
+                : avgTtfb <= 12000
+                    ? 100 - (avgTtfb - 6000) / 6000 * 22
+                    : avgTtfb <= 22000
+                        ? 78 - (avgTtfb - 12000) / 10000 * 38
+                        : Math.max(10, 40 - (avgTtfb - 22000) / 10000 * 20)
+            : 58;
+        const stabilityScore = ttfbCount ? Math.max(0, 100 - slowRate * 1.25) : 58;
+        const throughputScore = clamp(avgOutputPerMinute / 12000 * 100, 15, 100);
+        const speedScore = Math.round(clamp(waitScore * (ttfbCount ? 0.55 : 0.20)
+            + stabilityScore * (ttfbCount ? 0.35 : 0.20)
+            + throughputScore * (ttfbCount ? 0.10 : 0.60)));
+        let speedGrade = "样本不足";
+        let speedBandLabel = "需要更多调用";
+        let speedReason = "当前范围缺少开始出字记录，只能参考输出速度。";
+        let speedTone = "unknown";
+        if (totals.requests) {
+            if (speedScore >= 85) {
+                speedGrade = "很快";
+                speedBandLabel = "85+ 顺滑";
+                speedReason = "开始出字快，连续对话体感顺滑。";
+                speedTone = "good";
+            }
+            else if (speedScore >= 70) {
+                speedGrade = "正常";
+                speedBandLabel = "70-84 可用";
+                speedReason = "当前速度正常，可继续使用。";
+                speedTone = "ok";
+            }
+            else if (speedScore >= 55) {
+                speedGrade = "可用偏慢";
+                speedBandLabel = "55-69 略慢";
+                speedReason = "能用，但等待感已经比较明显。";
+                speedTone = "warn";
+            }
+            else if (speedScore >= 40) {
+                speedGrade = "明显偏慢";
+                speedBandLabel = "40-54 偏慢";
+                speedReason = "开始出字或慢请求会明显影响操作节奏。";
+                speedTone = "danger";
+            }
+            else {
+                speedGrade = "很慢";
+                speedBandLabel = "<40 卡顿";
+                speedReason = "当前速度不适合连续高频操作。";
+                speedTone = "danger";
+            }
+            if (ttfbCount && slowRate >= 35) {
+                speedReason = "慢请求偏多，主要卡在开始出字前。";
+            }
+            else if (ttfbCount && avgTtfb >= slowThresholdMs) {
+                speedReason = "开始出字等待偏长，体感会卡。";
+            }
+            else if (avgOutputPerMinute > 0 && avgOutputPerMinute < 3000) {
+                speedReason = "开始响应尚可，但输出吞吐偏低。";
+            }
+        }
+        const speedBars = buckets.slice(0, 16).map((row) => ({
+            label: row.label,
+            output: row.output || 0,
+            speed: (row.output || 0) / Math.max(1, (row.stepMinutes || 1) * 60),
+        }));
+        const speedModels = models
+            .filter((row) => row.latencyCount || row.output)
+            .slice()
+            .sort((a, b) => {
+            const latencyA = a.latencyCount ? a.latencyTotal / a.latencyCount : Infinity;
+            const latencyB = b.latencyCount ? b.latencyTotal / b.latencyCount : Infinity;
+            return latencyA - latencyB || b.output - a.output;
+        })
+            .slice(0, 4)
+            .map((row) => ({
+            name: row.name,
+            firstTokenLabel: row.latencyCount ? fmtMs(row.latencyTotal / row.latencyCount) : "--",
+            outputLabel: fmt(row.output || 0),
+            requests: row.requests || 0,
         }));
         return {
             label: range.label,
@@ -395,6 +634,39 @@
                 parts: costParts,
                 unpricedTokens: costs.unpricedTokens,
             },
+            performance: {
+                status: speedStatus,
+                note: speedNote,
+                speedScoreLabel: totals.requests ? `${speedScore}分` : "--",
+                speedGrade,
+                speedBandLabel,
+                speedReason,
+                speedTone,
+                firstTokenLabel: fmtMs(avgTtfb),
+                p95FirstTokenLabel: fmtMs(p95Ttfb),
+                bestFirstTokenLabel: fmtMs(bestTtfb),
+                medianFirstTokenLabel: fmtMs(medianTtfb),
+                slowRateLabel: ttfbCount ? `${slowRate.toFixed(0)}%` : "--",
+                slowDetailLabel: ttfbCount ? `${slowCount}/${ttfbCount} 次 > ${fmtMs(slowThresholdMs)}` : "没有开始出字样本",
+                firstTokenSpreadLabel: ttfbCount ? `${ttfbSpread.toFixed(1)}x` : "--",
+                firstTokenSpreadNote: ttfbCount ? `P95 ${fmtMs(p95Ttfb)} / 中位 ${fmtMs(medianTtfb)}` : "暂无可计算样本",
+                avgOutputSpeedLabel: fmtRate(avgOutputTps),
+                avgOutputTpmLabel: `${fmt(avgOutputTps * 60)} TPM`,
+                peakOutputSpeedLabel: fmtRate(peakOutput.tps),
+                peakOutputLabel: `${fmt(peakOutput.output)} output`,
+                peakOutputTime: peakOutput.label,
+                slowCount,
+                slowLabel: `${slowCount}/${ttfbCount || totals.requests || 0}`,
+                coverageLabel: `${ttfbCount}/${totals.requests || 0} 次可测速`,
+                activeWindowLabel: fmtDuration(activeMs),
+                outputTotalLabel: fmt(totals.output),
+                avgOutputPerMinuteLabel: `${fmt(avgOutputPerMinute)}/分钟`,
+                outputPerMinuteNote: `活跃 ${fmtDuration(activeMs)} · 共 ${fmt(totals.output)} output`,
+                avgOutputPerRequestLabel: totals.requests ? `${fmt(avgOutputPerRequest)}/次` : "--",
+                outputPerRequestNote: totals.requests ? `${fmt(totals.output)} output / ${totals.requests} 次` : "当前范围没有调用",
+                bars: speedBars,
+                models: speedModels,
+            },
             trend: buckets,
             distribution: buckets,
             sessions: sessions.map((row, index) => ({
@@ -404,9 +676,19 @@
                 tokenPercent: Math.round(row.tokens / maxSessionTokens * 100),
                 requestPercent: Math.round(row.requests / maxSessionRequests * 100),
             })),
+            projects: projects.map((row, index) => ({
+                ...row,
+                rank: index + 1,
+                tokensLabel: fmt(row.tokens),
+                costLabel: moneyCompact(row.cost || 0),
+                cacheHit: row.input ? row.cached / row.input * 100 : 0,
+                failureRate: row.requests ? row.failures / row.requests * 100 : 0,
+                percent: Math.round(row.tokens / maxProjectTokens * 100),
+            })),
             models: models.map((row) => ({
                 name: row.name,
                 tokens: row.tokens,
+                output: row.output || 0,
                 tokensLabel: fmt(row.tokens),
                 requests: row.requests,
                 latency: row.latencyCount ? row.latencyTotal / row.latencyCount / 1000 : 0,
@@ -422,10 +704,22 @@
             })),
             risk: [
                 { name: "5h 窗口", value: limits.primaryRemaining ?? 0, label: `${pct(limits.primaryRemaining ?? 0)} 剩余`, note: `已用 ${pct(limits.primaryUsed || 0)} · ${limits.primaryReset || "--"}`, tone: "blue" },
-                { name: "周限额", value: limits.secondaryRemaining ?? 0, label: `${pct(limits.secondaryRemaining ?? 0)} 剩余`, note: `已用 ${pct(limits.secondaryUsed || 0)} · ${limits.secondaryReset || "--"}`, tone: "teal" },
-                { name: "缓存", value: cacheHit, label: `命中 ${cacheHit.toFixed(0)}%`, note: "输入 token", tone: "teal" },
-                { name: "失败", value: failureRate, label: `${failureRate.toFixed(1)}%`, note: `${failures.length} 次失败`, tone: "amber" },
+                { name: "周限额", value: limits.secondaryRemaining ?? 0, label: `${pct(limits.secondaryRemaining ?? 0)} 剩余`, note: `已用 ${pct(limits.secondaryUsed || 0)} · ${limits.secondaryReset || "--"}`, tone: "violet" },
+                { name: "缓存", value: cacheHit, label: `命中 ${cacheHit.toFixed(0)}%`, note: "输入 token", tone: "magenta" },
+                { name: "失败", value: failureRate, label: `${failureRate.toFixed(1)}%`, note: `${failures.length} 次失败`, tone: failures.length ? "danger" : "blue" },
             ],
+            decision: {
+                rangeLabel: range.label,
+                riskText,
+                riskTone,
+                riskNote,
+                topProject: topProject?.name || "--",
+                topProjectNote: topProject ? `${fmt(topProject.tokens)} Token · ${topProject.requests} 次调用` : "当前范围暂无项目",
+                wasteText,
+                wasteNote,
+                actionText,
+                actionNote,
+            },
         };
     };
     const applyStats = (stats) => {
@@ -435,9 +729,12 @@
         distributionRows = stats.distribution;
         sessionRows = stats.sessions;
         modelRows = stats.models;
+        projectRows = stats.projects;
         costModelRows = stats.costModels;
         riskRows = stats.risk;
         costSummary = stats.cost;
+        decisionSummary = stats.decision;
+        performanceSummary = stats.performance || {};
         setText("tokenTotal", summary.totalTokensLabel || "--");
         setText("inputTokens", summary.inputLabel || "--");
         setText("cachedTokens", summary.cachedLabel || "--");
@@ -470,11 +767,58 @@
         }
         return withPrefix ? `来源：${label}` : label;
     };
-    setText("sourcePrimary", isSampleData ? "示例数据" : "Codex 桌面端");
-    setText("sourceSecondary", isSampleData ? "直接预览" : "本地日志");
-    setText("sourceTertiary", isSampleData ? "运行脚本看真实数据" : quotaSourceLabel(false));
-    setText("quotaSource", quotaSourceLabel(true));
-    setText("syncText", isSampleData ? "Demo 预览" : `${data.generatedAt?.slice(11, 16) || "--"} 已同步`);
+    const updateSourceLabels = () => {
+        if (uiState.privacyMode) {
+            setText("sourcePrimary", "本地数据");
+            setText("sourceSecondary", "名称已隐藏");
+            setText("sourceTertiary", "隐私模式");
+            setText("quotaSource", "来源：已隐藏");
+            setText("syncText", "截图安全");
+            return;
+        }
+        setText("sourcePrimary", isSampleData ? "示例数据" : "Codex 桌面端");
+        setText("sourceSecondary", isSampleData ? "直接预览" : "本地日志");
+        setText("sourceTertiary", isSampleData ? "运行脚本看真实数据" : quotaSourceLabel(false));
+        setText("quotaSource", quotaSourceLabel(true));
+        setText("syncText", isSampleData ? "Demo 预览" : `${data.generatedAt?.slice(11, 16) || "--"} 已同步`);
+    };
+    updateSourceLabels();
+    const startLocalAutoRefresh = () => {
+        const localHost = ["127.0.0.1", "localhost", "::1", "[::1]"].includes(window.location.hostname);
+        const localHttp = (window.location.protocol === "http:" || window.location.protocol === "https:") && localHost;
+        if (!localHttp || isSampleData)
+            return;
+        let knownGeneratedAt = String(data.generatedAt || "");
+        let reloadPending = false;
+        const pollStatus = async () => {
+            if (reloadPending)
+                return;
+            try {
+                const response = await fetch(`/api/status?ts=${Date.now()}`, { cache: "no-store" });
+                if (!response.ok)
+                    return;
+                const status = await response.json();
+                const nextGeneratedAt = String(status.generatedAt || "");
+                if (nextGeneratedAt && knownGeneratedAt && nextGeneratedAt !== knownGeneratedAt) {
+                    reloadPending = true;
+                    if (!uiState.privacyMode)
+                        setText("syncText", "数据已更新");
+                    window.location.reload();
+                    return;
+                }
+                if (nextGeneratedAt)
+                    knownGeneratedAt = nextGeneratedAt;
+                if (!uiState.privacyMode && status.running)
+                    setText("syncText", "刷新中");
+            }
+            catch {
+                // Static file mode and plain HTTP servers do not expose the local status API.
+            }
+        };
+        window.setTimeout(pollStatus, 5000);
+        window.setInterval(pollStatus, 60000);
+    };
+    startLocalAutoRefresh();
     const primaryRemain = limits.primaryRemaining ?? null;
     const secondaryRemain = limits.secondaryRemaining ?? null;
     const hasLimitData = primaryRemain !== null || secondaryRemain !== null;
@@ -568,11 +912,11 @@
             path.setAttribute("d", d);
     };
     const seriesConfig = {
-        total: { label: "总量", color: "#1668f2", width: 3, area: "areaBlue" },
-        cached: { label: "缓存", color: "#13aaa0", width: 2.6, area: "areaTeal" },
-        output: { label: "输出", color: "#6fb1ff", width: 2.2 },
-        input: { label: "输入", color: "#2f80ff", width: 2.2 },
-        reasoning: { label: "推理", color: "#8b5cf6", width: 2.2 },
+        total: { label: "总量", color: "var(--framer-chart-total, #ffffff)", width: 3, area: "areaBlue", tone: "total" },
+        cached: { label: "缓存", color: "var(--framer-chart-cache, #0099ff)", width: 2.6, area: "areaTeal", tone: "cache" },
+        output: { label: "输出", color: "var(--framer-chart-output, #6a4cf5)", width: 2.2, tone: "output" },
+        input: { label: "输入", color: "var(--framer-chart-input, #0099ff)", width: 2.2, tone: "input" },
+        reasoning: { label: "推理", color: "var(--framer-chart-reasoning, #d44df0)", width: 2.2, tone: "reasoning" },
     };
     const trendRowsForMode = (rows) => {
         // Interval mode uses each bucket as-is. Cumulative mode turns the same
@@ -604,13 +948,11 @@
             button.setAttribute("aria-pressed", String(active));
             button.title = `${active ? "隐藏" : "显示"}${config.label || key}曲线`;
             if (check) {
-                const tone = active
-                    ? `${key === "cached" ? " teal" : ""}${key === "output" ? " sky" : ""}${key === "reasoning" ? " violet" : ""}`
-                    : "";
+                const tone = active && config.tone ? ` ${config.tone}` : "";
                 check.className = `check${active ? " on" : ""}${tone}`;
                 check.innerHTML = active ? `<svg viewBox="0 0 16 16"><path d="m4 8 2.3 2.4L12 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>` : "";
                 if (active && key === "input")
-                    check.style.background = config.color || "";
+                    check.style.background = "";
                 else
                     check.style.background = "";
             }
@@ -667,7 +1009,7 @@
         setText("chartMeta", metaLabel);
         const tooltip = compactChart ? "" : `
       <rect x="${Math.min(right - 150, Math.max(left + 8, peakPoint[0] - 16))}" y="${Math.max(0, peakPoint[1] - 34)}" width="146" height="34" rx="5" class="tooltip-box"/>
-      <text x="${Math.min(right - 137, Math.max(left + 21, peakPoint[0] - 3))}" y="${Math.max(21, peakPoint[1] - 13)}" fill="#1a2d49" font-size="13" font-weight="700">${esc(metaLabel)}</text>`;
+      <text x="${Math.min(right - 137, Math.max(left + 21, peakPoint[0] - 3))}" y="${Math.max(21, peakPoint[1] - 13)}" class="tooltip-label">${esc(metaLabel)}</text>`;
         const areaPath = `<path data-series-area="${primaryKey}" d="${area(primary)}" fill="url(#areaSelected)"/>`;
         const linePaths = activeKeys.map((key) => {
             const config = seriesConfig[key];
@@ -686,7 +1028,7 @@
       ${areaPath}
       ${linePaths}
       <line x1="${peakPoint[0]}" y1="${peakPoint[1]}" x2="${peakPoint[0]}" y2="${bottom}" stroke="${primaryConfig.color}" stroke-width="1.5" stroke-dasharray="6 5"/>
-      <circle cx="${peakPoint[0]}" cy="${peakPoint[1]}" r="9" fill="#fff" stroke="${primaryConfig.color}" stroke-width="2"/>
+      <circle cx="${peakPoint[0]}" cy="${peakPoint[1]}" r="9" class="peak-ring" stroke="${primaryConfig.color}" stroke-width="2"/>
       <circle cx="${peakPoint[0]}" cy="${peakPoint[1]}" r="4.6" fill="${primaryConfig.color}"/>
       ${tooltip}
       ${xLabels}
@@ -719,12 +1061,18 @@
             return;
         }
         $("sessionList").innerHTML = head + rows.map((row, index) => `
-      <div class="session-row">
-        <span class="rank-name"><i class="num ${index > 2 ? "muted" : ""}">${index + 1}</i><span class="rank-text">${esc(row.name)}</span></span>
-        <span class="pill">${esc(row.model)}</span>
+      <div class="session-row ${row.failures ? "row-warn" : ""}">
+        <div class="session-top">
+          <span class="rank-name"><i class="num ${index > 2 ? "muted" : ""}">${index + 1}</i><span class="rank-text">${esc(displayName(row.name, "项目", index + 1))}</span></span>
+          <span class="pill">${esc(row.model)}</span>
+          <span class="session-value">${tokenMode ? esc(row.tokensLabel) : `${esc(row.requests)} 次`}</span>
+        </div>
         <span class="mini-bar"><span style="width:${Math.max(4, tokenMode ? row.tokenPercent || 0 : row.requestPercent || 0)}%"></span></span>
-        <span>${tokenMode ? esc(row.tokensLabel) : esc(row.requests)}</span>
-        <span class="status"></span>
+        <div class="session-meta">
+          <span>${esc(row.requests)} 次调用</span>
+          <span>${tokenMode ? "Token 消耗" : esc(row.tokensLabel)}</span>
+          <span class="${row.failures ? "fail" : "ok"}">${row.failures ? `失败 ${esc(row.failures)}` : "正常"}</span>
+        </div>
       </div>`).join("");
         const toggle = $("toggleSessions");
         if (toggle) {
@@ -732,8 +1080,51 @@
             toggle.innerHTML = uiState.sessionsExpanded ? "收起会话 <span>↑</span>" : `展开会话 <span>${rankedRows.length}</span>`;
         }
     };
+    const renderInsights = () => {
+        const decision = decisionSummary || {};
+        const range = decision.rangeLabel || summary.rangeLabel || "当前范围";
+        const riskTone = decision.riskTone || "neutral";
+        setText("insightSubtitle", `${range} · ${summary.totalTokensLabel || "--"} Token · ${summary.requestsLabel || "0"} 次调用`);
+        setText("insightRiskBadge", decision.riskText || "评估中");
+        $("insightRiskBadge")?.setAttribute("data-tone", riskTone);
+        $("insightPanel")?.setAttribute("data-risk", riskTone);
+        setText("insightTokenTotal", summary.totalTokensLabel || "--");
+        setText("insightTokenNote", `输入 ${summary.inputLabel || "--"} · 输出 ${summary.outputLabel || "--"}`);
+        setText("insightRisk", decision.riskText || "--");
+        setText("insightRiskNote", decision.riskNote || "等待额度数据");
+        setText("insightCallTotal", summary.requestsLabel || "0");
+        setText("insightCallNote", `成功率 ${summary.successRateLabel || "--"} · 失败 ${summary.failures ?? 0}`);
+        setText("insightCacheTotal", summary.cacheHitLabel || "--");
+        setText("insightCacheNote", `缓存 ${summary.cachedLabel || "--"} / 输入 ${summary.inputLabel || "--"}`);
+    };
+    const renderProjects = () => {
+        const rows = projectRows || [];
+        setText("projectSummary", `${summary.rangeLabel || "当前范围"} · ${rows.length || 0} 个项目`);
+        const list = $("projectList");
+        if (!list)
+            return;
+        if (!rows.length) {
+            list.innerHTML = `<div class="list-empty">当前范围没有项目调用</div>`;
+            return;
+        }
+        list.innerHTML = rows.slice(0, 5).map((row, index) => `
+      <div class="project-row">
+        <div class="project-main">
+          <span class="project-rank">${index + 1}</span>
+          <span class="project-name">${esc(displayName(row.name, "项目", index + 1))}</span>
+          <span class="project-cost">${esc(row.costLabel || moneyCompact(row.cost || 0))}</span>
+        </div>
+        <div class="project-meter"><span style="width:${Math.max(4, row.percent || 0)}%"></span></div>
+        <div class="project-meta">
+          <span>${esc(row.tokensLabel)} Token</span>
+          <span>${esc(row.requests)} 次调用</span>
+          <span>缓存 ${esc((row.cacheHit || 0).toFixed(0))}%</span>
+          <span class="${row.failures ? "fail" : ""}">失败 ${esc(row.failures || 0)}</span>
+        </div>
+      </div>`).join("");
+    };
     const renderModels = () => {
-        const colors = ["", "teal", "sky", "violet"];
+        const colors = ["tone-blue", "tone-violet", "tone-magenta", "tone-white"];
         const allRows = modelRows || [];
         const rows = uiState.modelsExpanded ? allRows : allRows.slice(0, 4);
         const head = `
@@ -750,7 +1141,7 @@
         $("modelList").innerHTML = head + rows.map((row, index) => `
       <div class="model-row">
         <span class="name">${esc(row.name)}</span>
-        <span class="bar"><span class="${colors[index] || ""}" style="width:${Math.max(4, row.percent || 0)}%"></span></span>
+        <span class="bar"><span class="${colors[index] || "tone-blue"}" style="width:${Math.max(4, row.percent || 0)}%"></span></span>
         <span class="tokens">${esc(row.tokensLabel)}</span>
         <span class="model-cost">${esc(money(row.cost || 0))}</span>
       </div>`).join("");
@@ -762,18 +1153,23 @@
     };
     const renderRisk = () => {
         const rows = riskRows || [];
-        const labels = ["▣", "◷", "◌", "!"];
+        const icons = [
+            `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="4"></rect><path d="M9 12h6"></path></svg>`,
+            `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><path d="M12 8v4l3 2"></path></svg>`,
+            `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8.5h10"></path><path d="M7 15.5h10"></path><path d="M9 6.5 7 8.5l2 2"></path><path d="M15 13.5l2 2-2 2"></path></svg>`,
+            `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><path d="M12 8v5"></path><path d="M12 16.5h.01"></path></svg>`,
+        ];
         $("riskList").innerHTML = rows.map((row, index) => `
       <div class="risk-row">
-        <span class="risk-icon">${labels[index] || "•"}</span><strong>${esc(row.name)}</strong>
-        <span class="track"><span class="fill ${row.tone === "teal" ? "teal" : row.tone === "amber" ? "amber" : ""}" style="display:block;width:${Math.max(2, Math.min(100, row.value || 0))}%"></span></span>
+        <span class="risk-icon tone-${esc(row.tone || "blue")}">${icons[index] || icons[0]}</span><strong>${esc(row.name)}</strong>
+        <span class="track"><span class="fill tone-${esc(row.tone || "blue")}" style="display:block;width:${Math.max(2, Math.min(100, row.value || 0))}%"></span></span>
         <span class="value">${esc(row.label)}${row.note ? `<small>${esc(row.note)}</small>` : ""}</span><span class="percent">${pct(row.value)}</span>
       </div>`).join("") + `
       <div class="warning">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 3 22 20H2L12 3Z" fill="currentColor"/>
-          <path d="M12 9v5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="12" cy="17" r="1.2" fill="#fff"/>
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3.5 21 20H3L12 3.5Z"/>
+          <path d="M12 9v5"/>
+          <path d="M12 17h.01"/>
         </svg>
         <div>
           <strong>${esc(summary.peakTime || "--")} Token 峰值 ${esc(summary.peakLabel || "--")}</strong>
@@ -840,6 +1236,9 @@
         const content = $("costContent");
         if (!content)
             return;
+        $("costPanel")?.toggleAttribute("hidden", !uiState.costVisible);
+        if (!uiState.costVisible)
+            return;
         document.querySelectorAll(".currency-mode").forEach((button) => {
             const active = button.dataset.currency === uiState.currency;
             button.classList.toggle("active", active);
@@ -891,7 +1290,7 @@
         <div class="cost-kicker">${uiState.currency === "USD" ? "美元估算" : "人民币换算"}</div>
         <div class="cost-total">${esc(money(cost.total || 0))}</div>
         <div class="cost-stats">
-          <div class="cost-stat"><span>平均</span><b>${esc(money(cost.average || 0))} / 调用</b></div>
+          <div class="cost-stat"><span>单次</span><b>${esc(money(cost.average || 0))}<small>/调用</small></b></div>
           <div class="cost-stat"><span>本区间</span><b>${esc(cost.rangeTokensLabel || "--")}</b></div>
         </div>
       </div>
@@ -913,10 +1312,99 @@
       </div>
       <div class="cost-footnote">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 3.2 19 6.5v5.2c0 4.4-2.8 7.3-7 9.1-4.2-1.8-7-4.7-7-9.1V6.5l7-3.3Z" fill="#eaf3ff" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M12 3.2 19 6.5v5.2c0 4.4-2.8 7.3-7 9.1-4.2-1.8-7-4.7-7-9.1V6.5l7-3.3Z" stroke="currentColor" stroke-width="1.8"/>
           <path d="m8.8 12.1 2.1 2.1 4.4-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span>按 OpenAI 官方美元价和本地 token 估算；ChatGPT/Codex 实际账单与额度以官方为准。${esc(fxNote)}</span>
+      </div>`;
+    };
+    const renderOptimization = () => {
+        const content = $("optimizationContent");
+        if (!content)
+            return;
+        const perf = performanceSummary || {};
+        const bars = perf.bars || [];
+        const models = perf.models || [];
+        const hasUsage = bars.some((row) => row.output || row.speed) || Number(summary.requestsLabel || 0) > 0;
+        setText("optimizationSummary", `${summary.rangeLabel || "当前范围"} · ${perf.coverageLabel || `${summary.requestsLabel || "0"} 次调用`}`);
+        if (!hasUsage) {
+            content.innerHTML = `<div class="list-empty">当前范围没有可测速的调用数据</div>`;
+            return;
+        }
+        const maxSpeed = Math.max(1, ...bars.map((row) => row.speed || 0));
+        const speedScoreValue = clamp(parseFloat(String(perf.speedScoreLabel || "").replace(/[^\d.]/g, "")));
+        const scoreWidth = speedScoreValue > 0 ? Math.max(4, speedScoreValue) : 0;
+        const activeSpeedBuckets = bars.filter((row) => row.speed || row.output).length;
+        const chartHint = activeSpeedBuckets > 1
+            ? `${activeSpeedBuckets} 个时段有输出`
+            : "样本集中在单个时段";
+        const barMarkup = bars.map((row) => {
+            const height = row.speed ? Math.max(8, Math.round(row.speed / maxSpeed * 56)) : 3;
+            return `
+        <span class="speed-bar" style="--h:${height}px" title="${esc(row.label)} · ${esc(fmtRate(row.speed || 0))}">
+          <i>${esc(row.label)}</i>
+        </span>`;
+        }).join("");
+        const modelMarkup = models.map((row) => `
+      <div class="speed-model-row">
+        <span>${esc(row.name)}</span>
+        <strong>${esc(row.firstTokenLabel)}</strong>
+        <small>${esc(row.outputLabel)} output · ${esc(row.requests)} 次</small>
+      </div>`).join("") || `<div class="list-empty">暂无模型等待数据</div>`;
+        content.innerHTML = `
+      <div class="speed-hero ${esc(perf.speedTone || "unknown")}">
+        <div class="speed-primary">
+          <span>体感速度分</span>
+          <div class="speed-score-line">
+            <strong>${esc(perf.speedScoreLabel || "--")}</strong>
+            <b>${esc(perf.speedGrade || "样本不足")}</b>
+          </div>
+          <small>${esc(perf.speedGrade || "样本不足")} · ${esc(perf.speedReason || "当前范围暂无足够测速样本")}</small>
+        </div>
+        <div class="speed-status">
+          <span>当前判断</span>
+          <strong>${esc(perf.speedBandLabel || "越高越顺")}</strong>
+          <div class="speed-score-track"><i style="width:${scoreWidth}%"></i></div>
+          <small>分数越高，开始等待越短，慢请求越少。</small>
+        </div>
+      </div>
+      <div class="speed-grid">
+        <div class="speed-stat">
+          <span>开始等待</span>
+          <strong>${esc(perf.firstTokenLabel || "--")}</strong>
+          <small>平均开始出字 · 大部分不超过 ${esc(perf.p95FirstTokenLabel || "--")}</small>
+        </div>
+        <div class="speed-stat">
+          <span>慢请求</span>
+          <strong>${esc(perf.slowRateLabel || "--")}</strong>
+          <small>${esc(perf.slowDetailLabel || "没有开始出字样本")}</small>
+        </div>
+        <div class="speed-stat">
+          <span>输出速度</span>
+          <strong>${esc(perf.avgOutputPerMinuteLabel || "--")}</strong>
+          <small>平均每分钟生成量</small>
+        </div>
+      </div>
+      <div class="speed-bottom">
+        <div>
+          <div class="speed-section-head">
+            <h4>速度变化</h4>
+            <span>${esc(chartHint)}</span>
+          </div>
+          <div class="speed-bars" aria-label="输出速度热度">${barMarkup}</div>
+        </div>
+        <div>
+          <div class="speed-section-head">
+            <h4>模型等待</h4>
+            <span>${esc(models.length ? `${models.length} 个模型` : "暂无")}</span>
+          </div>
+          <div class="speed-model-list">${modelMarkup}</div>
+          <div class="speed-guide">
+            <div><span>80+</span><strong>顺滑</strong></div>
+            <div><span>60-80</span><strong>可用</strong></div>
+            <div><span>&lt;60</span><strong>偏慢</strong></div>
+          </div>
+        </div>
       </div>`;
     };
     const renderSparks = () => {
@@ -925,17 +1413,25 @@
         setPath("cacheSpark", sparkPath(trendRows, "cached", 126, 36));
     };
     const renderAll = () => {
+        renderInsights();
         renderChart();
         renderDistribution();
         renderSparks();
+        renderProjects();
         renderSessions();
         renderModels();
         renderRisk();
         renderCost();
+        renderOptimization();
     };
     const refreshExchangeRate = async () => {
         // Optional display-only FX lookup. Failure keeps the bundled fallback
         // rate and never blocks the dashboard.
+        if (!uiState.fxEnabled) {
+            fxState.status = "fallback";
+            renderCost();
+            return;
+        }
         try {
             const response = await fetch(EXCHANGE_RATE_URL, { cache: "no-store" });
             if (!response.ok)
@@ -953,6 +1449,46 @@
             fxState.status = "fallback";
             renderCost();
         }
+    };
+    const applyPrivacyMode = (value = uiState.privacyMode) => {
+        uiState.privacyMode = !!value;
+        document.body.classList.toggle("privacy-mode", uiState.privacyMode);
+        const privacyToggle = $("privacyToggle");
+        const privacySetting = $("privacySetting");
+        if (privacyToggle) {
+            privacyToggle.classList.toggle("active", uiState.privacyMode);
+            privacyToggle.setAttribute("aria-pressed", String(uiState.privacyMode));
+            privacyToggle.textContent = uiState.privacyMode ? "已隐藏" : "隐私";
+        }
+        if (privacySetting)
+            privacySetting.checked = uiState.privacyMode;
+        updateSourceLabels();
+        renderInsights();
+        renderProjects();
+        renderSessions();
+        renderOptimization();
+    };
+    const applyDisplaySettings = () => {
+        document.body.classList.toggle("cost-hidden", !uiState.costVisible);
+        const costSetting = $("costSetting");
+        const fxSetting = $("fxSetting");
+        if (costSetting)
+            costSetting.checked = uiState.costVisible;
+        if (fxSetting)
+            fxSetting.checked = uiState.fxEnabled;
+        renderModels();
+        renderCost();
+        renderOptimization();
+    };
+    const openSettings = () => {
+        $("settingsOverlay")?.removeAttribute("hidden");
+        $("settingsDrawer")?.removeAttribute("hidden");
+        $("settingsButton")?.setAttribute("aria-expanded", "true");
+    };
+    const closeSettings = () => {
+        $("settingsOverlay")?.setAttribute("hidden", "");
+        $("settingsDrawer")?.setAttribute("hidden", "");
+        $("settingsButton")?.setAttribute("aria-expanded", "false");
     };
     const applyRange = (preset) => {
         // Central range switch: recompute filtered stats, reset expanded lists,
@@ -1026,29 +1562,57 @@
             uiState.currency = button.dataset.currency === "CNY" ? "CNY" : "USD";
             renderModels();
             renderCost();
-            if (uiState.currency === "CNY" && fxState.status === "fallback")
+            if (uiState.currency === "CNY" && uiState.fxEnabled && fxState.status === "fallback")
                 refreshExchangeRate();
         });
     });
+    $("privacyToggle")?.addEventListener("click", () => applyPrivacyMode(!uiState.privacyMode));
+    $("settingsButton")?.addEventListener("click", openSettings);
+    $("settingsClose")?.addEventListener("click", closeSettings);
+    $("settingsOverlay")?.addEventListener("click", closeSettings);
+    $("privacySetting")?.addEventListener("change", (event) => {
+        applyPrivacyMode(event.target.checked);
+    });
+    $("costSetting")?.addEventListener("change", (event) => {
+        uiState.costVisible = event.target.checked;
+        applyDisplaySettings();
+    });
+    $("fxSetting")?.addEventListener("change", (event) => {
+        uiState.fxEnabled = event.target.checked;
+        if (!uiState.fxEnabled)
+            fxState.status = "fallback";
+        applyDisplaySettings();
+    });
     const costHelp = $("costHelp");
-    if (costHelp) {
-        const closeCostHelp = () => costHelp.setAttribute("aria-expanded", "false");
+    const costHelpTip = $("costHelpTip");
+    if (costHelp && costHelpTip) {
+        costHelpTip.classList.add("cost-popover-floating");
+        document.body.appendChild(costHelpTip);
+        const setCostHelpOpen = (open) => {
+            costHelp.setAttribute("aria-expanded", String(open));
+            document.body.classList.toggle("cost-help-open", open);
+        };
+        const closeCostHelp = () => setCostHelpOpen(false);
         costHelp.addEventListener("click", (event) => {
             event.stopPropagation();
             const expanded = costHelp.getAttribute("aria-expanded") === "true";
-            costHelp.setAttribute("aria-expanded", String(!expanded));
+            setCostHelpOpen(!expanded);
         });
         document.addEventListener("click", (event) => {
             const target = event.target instanceof Element ? event.target : null;
-            if (!target?.closest(".cost-help-wrap"))
+            if (!target?.closest(".cost-help-wrap") && !target?.closest("#costHelpTip"))
                 closeCostHelp();
         });
         document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape")
+            if (event.key === "Escape") {
                 closeCostHelp();
+                closeSettings();
+            }
         });
     }
     applyRange("today");
+    applyPrivacyMode(false);
+    applyDisplaySettings();
     $("toggleSessions")?.addEventListener("click", () => {
         uiState.sessionsExpanded = !uiState.sessionsExpanded;
         renderSessions();

@@ -1,0 +1,772 @@
+/*
+  Framer Black Artboard skin for CodexScope.
+  Loaded after styles.css so it can be removed cleanly to roll back the look.
+*/
+
+:root {
+  color-scheme: dark;
+  --bg: #090909;
+  --panel: #141414;
+  --panel-solid: #141414;
+  --line: #262626;
+  --line-soft: #1d1d1d;
+  --text: #ffffff;
+  --muted: #9a9a9a;
+  --muted-2: #6e6e6e;
+  --blue: #0099ff;
+  --blue-2: #46b8ff;
+  --blue-soft: rgba(0, 153, 255, 0.15);
+  --teal: #31e7c5;
+  --teal-soft: rgba(49, 231, 197, 0.14);
+  --sky: #70c8ff;
+  --violet: #9b6dff;
+  --amber: #ff9f43;
+  --amber-soft: rgba(255, 159, 67, 0.15);
+  --green: #22c55e;
+  --red: #ff5577;
+  --framer-surface-0: #090909;
+  --framer-surface-1: #111111;
+  --framer-surface-2: #161616;
+  --framer-border: rgba(255, 255, 255, 0.12);
+  --framer-border-soft: rgba(255, 255, 255, 0.08);
+  --framer-text: #ffffff;
+  --framer-muted: #9a9a9a;
+  --framer-blue: #0099ff;
+  --framer-violet: #6a4cf5;
+  --framer-magenta: #d44df0;
+  --framer-danger: #ff5577;
+  --framer-success: #22c55e;
+  --framer-gradient: linear-gradient(135deg, #0099ff 0%, #6a4cf5 48%, #d44df0 100%);
+  --framer-chart-total: #ffffff;
+  --framer-chart-input: #0099ff;
+  --framer-chart-cache: #46b8ff;
+  --framer-chart-output: #6a4cf5;
+  --framer-chart-reasoning: #d44df0;
+  --shadow: none;
+  --radius: 8px;
+  --font: "Inter Variable", "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  --mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, monospace;
+}
+
+html,
+body {
+  background: #090909;
+  color: var(--text);
+}
+
+body {
+  background:
+    linear-gradient(180deg, #050505 0%, #090909 34%, #0b0b0c 100%),
+    #090909 !important;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.75), transparent 72%);
+}
+
+::selection {
+  background: rgba(0, 153, 255, 0.35);
+  color: #ffffff;
+}
+
+.app {
+  background: transparent;
+}
+
+.topbar {
+  background: rgba(9, 9, 9, 0.82) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(18px) saturate(130%);
+}
+
+.brand {
+  color: #ffffff;
+  font-weight: 760;
+  letter-spacing: -0.02em;
+}
+
+.brand-mark {
+  position: relative;
+  border-radius: 8px !important;
+  background:
+    var(--framer-gradient) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16), 0 14px 34px rgba(0, 153, 255, 0.18) !important;
+}
+
+.brand-mark svg {
+  display: none;
+}
+
+.brand-mark::before,
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 3px;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.brand-mark::before {
+  transform: translate(calc(-50% - 2px), calc(-50% - 3px)) rotate(-28deg);
+}
+
+.brand-mark::after {
+  transform: translate(calc(-50% + 2px), calc(-50% + 4px)) rotate(-28deg);
+  opacity: 0.82;
+}
+
+.tab {
+  color: #858585 !important;
+  font-weight: 560;
+}
+
+.tab:hover,
+.tab.active {
+  color: #ffffff !important;
+}
+
+.tab.active::after {
+  height: 2px;
+  background: #ffffff !important;
+}
+
+.sources,
+.sync,
+.icon-action,
+.period-btn,
+.custom-range input,
+.trend-toggle,
+.dist-toggle,
+.currency-toggle,
+.session-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  color: #d7d7d7 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(12px);
+}
+
+.sources {
+  width: min(520px, 100%) !important;
+  max-width: 520px !important;
+}
+
+.source-chip {
+  flex: 0 1 auto !important;
+  color: #999999 !important;
+}
+
+.source-chip.primary,
+.sync,
+.icon-action:hover,
+.period-btn.active {
+  color: #ffffff !important;
+}
+
+.source-chip::before {
+  background: #555555 !important;
+}
+
+.source-chip.primary::before,
+.sync svg,
+.period-btn.active {
+  color: #0099ff !important;
+}
+
+.source-chip.primary::before {
+  background: var(--framer-blue) !important;
+}
+
+.period-btn.active,
+.trend-mode.active,
+.trend-scale.active,
+.dist-mode.active,
+.session-mode.active,
+.currency-mode.active {
+  background: #ffffff !important;
+  color: #050505 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.custom-range span {
+  color: #777777;
+}
+
+main {
+  padding-top: 18px !important;
+}
+
+.grid {
+  gap: 14px !important;
+}
+
+.panel,
+.metric,
+.coverage,
+.settings-drawer {
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.058), rgba(255, 255, 255, 0.034)),
+    #111111 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+}
+
+.panel:hover,
+.metric:hover {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.panel-title h2,
+.panel-title h3,
+.metric h3,
+.insight-head h2,
+.settings-title h2 {
+  color: #ffffff !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.panel-title,
+.insight-head,
+.settings-title {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.panel-title span,
+.forecast,
+.badge,
+.hint,
+.metric-footer,
+.metric .delta,
+.cost-source,
+.settings-title p,
+.settings-note,
+.list-empty,
+.session-head,
+.project-meta,
+.cost-kicker,
+.speed-note,
+.speed-stat span {
+  color: #8f8f8f !important;
+}
+
+.badge,
+.hint,
+.cost-help {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.hint,
+.cost-help,
+.drawer-close {
+  display: inline-grid !important;
+  place-items: center;
+  width: 18px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  font-weight: 760 !important;
+}
+
+.cost-help {
+  width: 20px !important;
+  min-width: 20px !important;
+  height: 20px !important;
+}
+
+.insight-panel {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(0, 153, 255, 0.2), transparent 34%),
+    linear-gradient(315deg, rgba(212, 77, 240, 0.16), transparent 34%),
+    #111111 !important;
+}
+
+.insight-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 36px 36px;
+  opacity: 0.35;
+}
+
+.insight-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.insight-card {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.026)),
+    rgba(9, 9, 9, 0.58) !important;
+  box-shadow: none !important;
+  overflow: hidden;
+  position: relative;
+}
+
+.insight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--card-accent, var(--framer-blue));
+  opacity: 0.95;
+}
+
+.insight-card:nth-child(1) {
+  --card-accent: var(--framer-blue);
+}
+
+.insight-card:nth-child(2) {
+  --card-accent: var(--framer-violet);
+}
+
+.insight-card:nth-child(3) {
+  --card-accent: var(--framer-magenta);
+}
+
+.insight-card:nth-child(4) {
+  --card-accent: #ffffff;
+}
+
+.insight-card span,
+.insight-card small {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.insight-card strong,
+.metric-value,
+.cost-total,
+.speed-primary strong,
+.speed-orb b {
+  color: #ffffff !important;
+  letter-spacing: -0.045em !important;
+}
+
+.insight-card {
+  min-width: 0;
+}
+
+.insight-card strong {
+  overflow-wrap: anywhere;
+}
+
+.insight-badge {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.insight-badge[data-tone="ok"],
+.insight-badge[data-tone="safe"],
+.insight-badge[data-tone="good"] {
+  border-color: rgba(34, 197, 94, 0.32) !important;
+  background: rgba(34, 197, 94, 0.1) !important;
+  color: #86efac !important;
+}
+
+.insight-badge[data-tone="warn"] {
+  border-color: rgba(255, 85, 119, 0.34) !important;
+  background: rgba(255, 85, 119, 0.1) !important;
+  color: #ff9aad !important;
+}
+
+.chart-wrap,
+.distribution-chart,
+.cost-chart,
+.speed-bars,
+.ringbox,
+.project-list,
+.rank-list,
+.model-list,
+.risk-list,
+.cost-summary,
+.cost-composition,
+.cost-trend,
+.speed-hero,
+.speed-stat,
+.speed-bottom > div,
+.settings-section {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  box-shadow: none !important;
+}
+
+.axis-line,
+.grid-line {
+  stroke: rgba(255, 255, 255, 0.1) !important;
+}
+
+.chart-label,
+.axis-label,
+.tooltip-label {
+  fill: #8f8f8f !important;
+}
+
+.tooltip-box {
+  fill: rgba(9, 9, 9, 0.88) !important;
+  stroke: rgba(255, 255, 255, 0.12) !important;
+}
+
+.tooltip-label {
+  font-size: 13px;
+  font-weight: 700;
+  fill: #ffffff !important;
+}
+
+.peak-ring {
+  fill: #090909 !important;
+}
+
+#trendChart path.total,
+#trendChart .total,
+#requestSpark,
+#peakSpark,
+#cacheSpark {
+  stroke: #0099ff !important;
+}
+
+.legend-item,
+.cost-part,
+.cost-model-row,
+.speed-model-row,
+.project-row,
+.session-row,
+.risk-row,
+.data-row,
+.setting-row {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: transparent !important;
+  color: #dcdcdc !important;
+}
+
+.legend-item {
+  color: #a8a8a8 !important;
+}
+
+.check,
+.dot,
+.cost-name i {
+  box-shadow: none !important;
+}
+
+.check.on,
+.dot,
+.cost-name i,
+.risk-icon {
+  background: var(--framer-blue) !important;
+}
+
+.check.total,
+.check.on.total {
+  background: #ffffff !important;
+  color: #090909 !important;
+}
+
+.check.cache,
+.check.input,
+.dot,
+.tone-blue,
+.fill.tone-blue {
+  background: var(--framer-blue) !important;
+}
+
+.check.output,
+.tone-violet,
+.fill.tone-violet {
+  background: var(--framer-violet) !important;
+}
+
+.check.reasoning,
+.tone-magenta,
+.fill.tone-magenta {
+  background: var(--framer-magenta) !important;
+}
+
+.tone-white,
+.fill.tone-white {
+  background: #ffffff !important;
+}
+
+.tone-danger,
+.fill.tone-danger {
+  background: var(--framer-danger) !important;
+}
+
+.risk-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 7px !important;
+  color: #ffffff !important;
+}
+
+.risk-icon svg,
+.warning .ui-icon,
+.cost-footnote svg,
+.shield svg,
+.sync svg {
+  width: 16px;
+  height: 16px;
+}
+
+.risk-icon svg *,
+.warning .ui-icon *,
+.cost-footnote svg *,
+.shield svg * {
+  vector-effect: non-scaling-stroke;
+}
+
+.risk-icon svg rect,
+.risk-icon svg circle,
+.risk-icon svg path,
+.warning .ui-icon path,
+.cost-footnote svg path,
+.shield svg path {
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 1.8 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+.splitbar,
+.cost-stack,
+.quota-row .track,
+.quota-risk-list .risk-row .track,
+.cost-model-row .bar {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.metric-primary {
+  background:
+    linear-gradient(135deg, rgba(0, 153, 255, 0.2), rgba(20, 20, 20, 0.72)),
+    #111111 !important;
+}
+
+.metric:nth-child(2),
+.metric:nth-child(3),
+.metric:nth-child(4) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.058), rgba(255, 255, 255, 0.034)),
+    #111111 !important;
+}
+
+.lower .panel:nth-child(4),
+#optimizationPanel {
+  background:
+    linear-gradient(135deg, rgba(212, 77, 240, 0.14), transparent 36%),
+    linear-gradient(315deg, rgba(0, 153, 255, 0.14), transparent 30%),
+    #111111 !important;
+}
+
+.currency-mode,
+.trend-mode,
+.trend-scale,
+.dist-mode,
+.session-mode {
+  color: #a7a7a7 !important;
+}
+
+.currency-mode:not(.active):hover,
+.trend-mode:not(.active):hover,
+.trend-scale:not(.active):hover,
+.dist-mode:not(.active):hover,
+.session-mode:not(.active):hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.quota-risk-list .warning,
+.cost-footnote,
+.speed-note,
+.settings-note {
+  border-color: rgba(0, 153, 255, 0.2) !important;
+  background: rgba(0, 153, 255, 0.075) !important;
+  color: #b8dfff !important;
+}
+
+.ring-bg {
+  stroke: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ring-main {
+  stroke: #0099ff !important;
+}
+
+.ring-teal {
+  stroke: #6a4cf5 !important;
+}
+
+.ring-sky {
+  stroke: #d44df0 !important;
+}
+
+.shield {
+  color: #ffffff !important;
+}
+
+.shield svg path:first-child {
+  fill: none !important;
+  stroke: #ffffff !important;
+}
+
+.shield svg path:last-child {
+  stroke: #ffffff !important;
+}
+
+.bar,
+.mini-bar,
+.cost-chart span,
+.speed-bar {
+  background: linear-gradient(180deg, #ffffff, var(--framer-blue)) !important;
+}
+
+.dist-bar {
+  background: transparent !important;
+}
+
+.bar span,
+.mini-bar span,
+.project-meter span,
+.dist-bar-fill,
+.cost-model-row .bar span {
+  background: var(--framer-gradient) !important;
+}
+
+.bar span.tone-blue,
+.model-row .bar span.tone-blue {
+  background: linear-gradient(90deg, var(--framer-blue), #46b8ff) !important;
+}
+
+.bar span.tone-violet,
+.model-row .bar span.tone-violet {
+  background: linear-gradient(90deg, var(--framer-blue), var(--framer-violet)) !important;
+}
+
+.bar span.tone-magenta,
+.model-row .bar span.tone-magenta {
+  background: linear-gradient(90deg, var(--framer-violet), var(--framer-magenta)) !important;
+}
+
+.bar span.tone-white,
+.model-row .bar span.tone-white {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.84), #ffffff) !important;
+}
+
+.cost-input,
+.cost-cache,
+.cost-output,
+.cost-reasoning {
+  filter: saturate(1.15);
+}
+
+.cost-input {
+  background: var(--framer-blue) !important;
+}
+
+.cost-cache {
+  background: var(--framer-violet) !important;
+}
+
+.cost-output {
+  background: var(--framer-magenta) !important;
+}
+
+.cost-reasoning {
+  background: #ffffff !important;
+}
+
+.link {
+  color: #0099ff !important;
+}
+
+.settings-overlay {
+  background: rgba(0, 0, 0, 0.68) !important;
+  backdrop-filter: blur(8px);
+}
+
+.drawer-close {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  border-radius: 10px !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+}
+
+.settings-section h3,
+.setting-row strong,
+.data-row span,
+.data-row code {
+  color: #ffffff !important;
+}
+
+input[type="checkbox"] {
+  accent-color: #0099ff;
+}
+
+.cost-popover {
+  background: #111111 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5) !important;
+}
+
+.price-table th,
+.price-table td {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+@media (max-width: 700px) {
+  main {
+    padding-top: 12px !important;
+  }
+
+  .topbar {
+    background: rgba(9, 9, 9, 0.92) !important;
+  }
+
+  .insight-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .insight-card strong {
+    font-size: clamp(23px, 8vw, 32px) !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .sources {
+    width: min(360px, 100%) !important;
+    max-width: 360px !important;
+  }
+}

@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodexScope UI 风格选择</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #08090c;
+      --text: #f5f7fb;
+      --muted: #a0a6b3;
+      --line: rgba(255, 255, 255, 0.1);
+      --panel: rgba(255, 255, 255, 0.055);
+      --accent: #57c1ff;
+      --font: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", "PingFang SC", sans-serif;
+      --mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% -8%, rgba(87, 193, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 80% 0%, rgba(167, 139, 250, 0.16), transparent 28%),
+        linear-gradient(180deg, #0b0c10, #07080a 42%, #050608);
+      font-family: var(--font);
+      letter-spacing: 0;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .page {
+      width: min(1440px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    .top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 28px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #c9d2df;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 16px var(--accent);
+    }
+
+    h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(34px, 4vw, 58px);
+      line-height: 1.04;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      max-width: 840px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: #e8edf6;
+      background: rgba(255, 255, 255, 0.055);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .action.primary {
+      border-color: transparent;
+      color: #050608;
+      background: #ffffff;
+    }
+
+    .selector {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .option {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.045);
+      cursor: pointer;
+      color: inherit;
+      text-align: left;
+      overflow: hidden;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+    }
+
+    .option:hover,
+    .option.active {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--theme-accent) 60%, rgba(255, 255, 255, 0.18));
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .option.active::after {
+      content: "已选";
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--theme-accent);
+      color: var(--theme-on-accent);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .option.recommended::before {
+      content: "推荐";
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      z-index: 2;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .preview {
+      height: 210px;
+      border-radius: 12px;
+      border: 1px solid var(--theme-line);
+      background: var(--theme-bg);
+      color: var(--theme-text);
+      overflow: hidden;
+      box-shadow: var(--theme-shadow);
+    }
+
+    .mini-top {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--theme-line);
+      background: var(--theme-top);
+    }
+
+    .mini-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      font-size: 11px;
+      font-weight: 760;
+    }
+
+    .mini-mark {
+      width: 16px;
+      height: 16px;
+      border-radius: 5px;
+      background: var(--theme-accent);
+    }
+
+    .mini-tabs {
+      display: flex;
+      gap: 5px;
+    }
+
+    .mini-tabs span {
+      width: 30px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--theme-chip);
+    }
+
+    .mini-main {
+      display: grid;
+      grid-template-columns: 1.18fr 0.82fr;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .mini-summary {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+    }
+
+    .mini-card {
+      min-height: 44px;
+      border-radius: 8px;
+      border: 1px solid var(--theme-line);
+      background: var(--theme-card);
+      padding: 7px;
+    }
+
+    .mini-label {
+      height: 5px;
+      width: 42%;
+      border-radius: 999px;
+      background: var(--theme-muted);
+      opacity: 0.65;
+    }
+
+    .mini-value {
+      height: 11px;
+      width: 68%;
+      margin-top: 8px;
+      border-radius: 999px;
+      background: var(--theme-text);
+    }
+
+    .mini-chart,
+    .mini-side {
+      min-height: 92px;
+      border-radius: 10px;
+      border: 1px solid var(--theme-line);
+      background: var(--theme-card);
+      padding: 12px;
+    }
+
+    .mini-line {
+      width: 100%;
+      height: 56px;
+    }
+
+    .mini-line path {
+      fill: none;
+      stroke: var(--theme-accent);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .mini-row {
+      display: grid;
+      grid-template-columns: 30px 1fr 36px;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .mini-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      background: var(--theme-accent-soft);
+    }
+
+    .mini-bar {
+      height: 7px;
+      border-radius: 999px;
+      background: var(--theme-chip);
+      overflow: hidden;
+    }
+
+    .mini-bar span {
+      display: block;
+      height: 100%;
+      width: var(--w);
+      border-radius: inherit;
+      background: var(--theme-accent);
+    }
+
+    .mini-num {
+      height: 7px;
+      border-radius: 999px;
+      background: var(--theme-muted);
+    }
+
+    .option-copy {
+      padding: 13px 2px 2px;
+    }
+
+    .option-copy h2 {
+      margin: 0;
+      font-size: 19px;
+      letter-spacing: -0.02em;
+    }
+
+    .option-copy p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .tags span {
+      padding: 4px 7px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      color: #d6dce7;
+      background: rgba(255, 255, 255, 0.055);
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .detail {
+      position: sticky;
+      top: 20px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+      background: rgba(8, 9, 12, 0.82);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+    }
+
+    .detail-preview {
+      height: 330px;
+      margin-bottom: 18px;
+      border-radius: 16px;
+    }
+
+    .detail h2 {
+      margin: 0 0 8px;
+      font-size: 27px;
+      letter-spacing: -0.03em;
+    }
+
+    .detail p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 14px;
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .detail-list div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      color: #dfe5ef;
+      font-size: 13px;
+    }
+
+    .detail-list span {
+      color: var(--muted);
+    }
+
+    .note {
+      margin-top: 16px;
+      padding: 13px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.055);
+      color: #cbd3df;
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .theme-raycast {
+      --theme-bg: #07080a;
+      --theme-top: #0d0d0d;
+      --theme-card: #101111;
+      --theme-text: #f4f4f6;
+      --theme-muted: #9c9c9d;
+      --theme-line: #242728;
+      --theme-chip: #18191a;
+      --theme-accent: #57c1ff;
+      --theme-accent-soft: rgba(87, 193, 255, 0.16);
+      --theme-on-accent: #041018;
+      --theme-shadow: none;
+    }
+
+    .theme-vercel {
+      --theme-bg: #ffffff;
+      --theme-top: #fafafa;
+      --theme-card: #ffffff;
+      --theme-text: #171717;
+      --theme-muted: #666666;
+      --theme-line: rgba(0, 0, 0, 0.08);
+      --theme-chip: #ebebeb;
+      --theme-accent: #0072f5;
+      --theme-accent-soft: #ebf5ff;
+      --theme-on-accent: #ffffff;
+      --theme-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .theme-apple {
+      --theme-bg: #f5f5f7;
+      --theme-top: rgba(255, 255, 255, 0.82);
+      --theme-card: #ffffff;
+      --theme-text: #1d1d1f;
+      --theme-muted: #7a7a7a;
+      --theme-line: #e0e0e0;
+      --theme-chip: #e9e9ed;
+      --theme-accent: #0066cc;
+      --theme-accent-soft: #e8f2ff;
+      --theme-on-accent: #ffffff;
+      --theme-shadow: 0 18px 46px rgba(0, 0, 0, 0.12);
+    }
+
+    .theme-linear {
+      --theme-bg: #0d0d12;
+      --theme-top: rgba(20, 20, 28, 0.9);
+      --theme-card: #15151f;
+      --theme-text: #f7f7fb;
+      --theme-muted: #9ca0b5;
+      --theme-line: rgba(160, 146, 255, 0.18);
+      --theme-chip: #242235;
+      --theme-accent: #8b7cff;
+      --theme-accent-soft: rgba(139, 124, 255, 0.18);
+      --theme-on-accent: #ffffff;
+      --theme-shadow: 0 20px 60px rgba(80, 70, 180, 0.18);
+    }
+
+    .theme-warp {
+      --theme-bg: #11100f;
+      --theme-top: #181716;
+      --theme-card: rgba(255, 255, 255, 0.045);
+      --theme-text: #faf9f6;
+      --theme-muted: #868584;
+      --theme-line: rgba(226, 226, 226, 0.22);
+      --theme-chip: #353534;
+      --theme-accent: #faf9f6;
+      --theme-accent-soft: rgba(250, 249, 246, 0.14);
+      --theme-on-accent: #11100f;
+      --theme-shadow: none;
+    }
+
+    .theme-framer {
+      --theme-bg: #090909;
+      --theme-top: #090909;
+      --theme-card: #141414;
+      --theme-text: #ffffff;
+      --theme-muted: #999999;
+      --theme-line: #262626;
+      --theme-chip: #1c1c1c;
+      --theme-accent: #0099ff;
+      --theme-accent-soft: rgba(0, 153, 255, 0.18);
+      --theme-on-accent: #ffffff;
+      --theme-shadow: 0 22px 70px rgba(0, 153, 255, 0.12);
+    }
+
+    .theme-framer .mini-card:nth-child(2),
+    .theme-framer .mini-side {
+      background: linear-gradient(135deg, rgba(212, 77, 240, 0.92), rgba(106, 76, 245, 0.88) 48%, rgba(255, 122, 61, 0.82));
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .theme-minimax {
+      --theme-bg: #ffffff;
+      --theme-top: #ffffff;
+      --theme-card: #f7f8fa;
+      --theme-text: #0a0a0a;
+      --theme-muted: #5f5f5f;
+      --theme-line: #e5e7eb;
+      --theme-chip: #f2f3f5;
+      --theme-accent: #ff5530;
+      --theme-accent-soft: rgba(255, 85, 48, 0.15);
+      --theme-on-accent: #ffffff;
+      --theme-shadow: 0 18px 46px rgba(255, 85, 48, 0.16);
+    }
+
+    .theme-minimax .mini-card:nth-child(1) {
+      background: #ff5530;
+      border-color: #ff5530;
+    }
+
+    .theme-minimax .mini-card:nth-child(2) {
+      background: #ea5ec1;
+      border-color: #ea5ec1;
+    }
+
+    .theme-minimax .mini-card:nth-child(3) {
+      background: #1456f0;
+      border-color: #1456f0;
+    }
+
+    .theme-minimax .mini-card:nth-child(4) {
+      background: #a855f7;
+      border-color: #a855f7;
+    }
+
+    .theme-stripe {
+      --theme-bg: #f6f9fc;
+      --theme-top: rgba(255, 255, 255, 0.9);
+      --theme-card: #ffffff;
+      --theme-text: #0a2540;
+      --theme-muted: #425466;
+      --theme-line: rgba(10, 37, 64, 0.12);
+      --theme-chip: #e7ecf2;
+      --theme-accent: #635bff;
+      --theme-accent-soft: rgba(99, 91, 255, 0.16);
+      --theme-on-accent: #ffffff;
+      --theme-shadow: 0 22px 60px rgba(50, 50, 93, 0.16);
+    }
+
+    .theme-stripe .preview {
+      background:
+        linear-gradient(135deg, rgba(99, 91, 255, 0.12), transparent 34%),
+        linear-gradient(315deg, rgba(0, 212, 255, 0.14), transparent 28%),
+        var(--theme-bg);
+    }
+
+    .theme-runway {
+      --theme-bg: #030303;
+      --theme-top: #0a0a0a;
+      --theme-card: #111111;
+      --theme-text: #f4f1eb;
+      --theme-muted: #a9a49b;
+      --theme-line: rgba(244, 241, 235, 0.16);
+      --theme-chip: #1b1b1b;
+      --theme-accent: #f4f1eb;
+      --theme-accent-soft: rgba(244, 241, 235, 0.14);
+      --theme-on-accent: #030303;
+      --theme-shadow: 0 28px 80px rgba(0, 0, 0, 0.38);
+    }
+
+    .theme-runway .mini-chart {
+      background:
+        linear-gradient(180deg, rgba(244, 241, 235, 0.08), rgba(244, 241, 235, 0.015)),
+        var(--theme-card);
+    }
+
+    .theme-eleven {
+      --theme-bg: #f5f5f5;
+      --theme-top: #f5f5f5;
+      --theme-card: #ffffff;
+      --theme-text: #0c0a09;
+      --theme-muted: #777169;
+      --theme-line: #e7e5e4;
+      --theme-chip: #f0efed;
+      --theme-accent: #292524;
+      --theme-accent-soft: rgba(167, 229, 211, 0.38);
+      --theme-on-accent: #ffffff;
+      --theme-shadow: 0 18px 50px rgba(12, 10, 9, 0.1);
+    }
+
+    .theme-eleven .preview {
+      background:
+        radial-gradient(circle at 70% 28%, rgba(167, 229, 211, 0.42), transparent 28%),
+        radial-gradient(circle at 20% 88%, rgba(244, 197, 168, 0.38), transparent 30%),
+        var(--theme-bg);
+    }
+
+    @media (max-width: 1120px) {
+      .selector {
+        grid-template-columns: 1fr;
+      }
+
+      .detail {
+        position: static;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        width: min(100vw - 24px, 560px);
+        padding-top: 20px;
+      }
+
+      .top,
+      .options {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: flex-start;
+      }
+
+      .preview {
+        height: 190px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="top">
+      <div>
+        <span class="eyebrow">CodexScope UI Direction</span>
+        <h1>选一个气质，再动主界面</h1>
+        <p class="lead">下面是我从 awesome-design-md 里挑的 10 个方向。前 5 个偏稳，后 5 个设计感更强、更有科技氛围；每张卡都用同一套 CodexScope 看板结构做缩略预览。</p>
+      </div>
+      <div class="actions">
+        <a class="action" href="./index.html">回到主看板</a>
+        <a class="action primary" href="https://github.com/VoltAgent/awesome-design-md" target="_blank" rel="noreferrer">查看来源</a>
+      </div>
+    </section>
+
+    <section class="selector" aria-label="UI 风格选择">
+      <div class="options" id="options">
+        <button class="option recommended active theme-raycast" type="button" data-style="raycast">
+          <div class="preview"></div>
+          <div class="option-copy">
+            <h2>Raycast Command Center</h2>
+            <p>最适合本地 Mac 工具。深色命令面板、细边框、高信息密度，科技感强但不花。</p>
+            <div class="tags"><span>推荐</span><span>macOS 工具感</span><span>深色看板</span></div>
+          </div>
+        </button>
+
+        <button class="option theme-vercel" type="button" data-style="vercel">
+          <div class="preview"></div>
+          <div class="option-copy">
+            <h2>Vercel Console Minimal</h2>
+            <p>白底极简工程感。适合想让数据更清楚、商务汇报更干净的版本。</p>
+            <div class="tags"><span>极简</span><span>白底</span><span>工程审美</span></div>
+          </div>
+        </button>
+
+        <button class="option theme-apple" type="button" data-style="apple">
+          <div class="preview"></div>
+          <div class="option-copy">
+            <h2>Apple System Glass</h2>
+            <p>最贴近 macOS 原生感。柔和、留白多、蓝色交互清晰，但数据密度会降低。</p>
+            <div class="tags"><span>macOS</span><span>柔和</span><span>轻量</span></div>
+          </div>
+        </button>
+
+        <button class="option theme-linear" type="button" data-style="linear">
+          <div class="preview"></div>
+          <div class="option-copy">
+            <h2>Linear Precision</h2>
+            <p>适合做成“工程管理中控台”。层级清楚、紫色点缀、整体更冷静精准。</p>
+            <div class="tags"><span>精准</span><span>紫色点缀</span><span>团队工具</span></div>
+          </div>
+        </button>
+
+        <button class="option theme-warp" type="button" data-style="warp">
+          <div class="preview"></div>
+          <div class="option-copy">
+            <h2>Warp Warm Terminal</h2>
+            <p>温暖暗色终端风。没有强烈荧光，更沉稳，适合长时间开着看。</p>
+            <div class="tags"><span>终端感</span><span>暖黑</span><span>耐看</span></div>
+          </div>
+        </button>
+
+        <button class="option theme-framer" type="button" data-style="framer">
+          <div class="preview"></div>
+          <div class="option-copy">
+            <h2>Framer Black Artboard</h2>
+            <p>黑色画布、白色大字、蓝色选择态和少量高饱和渐变卡片，设计冲击力最强。</p>
+            <div class="tags"><span>强设计感</span><span>黑色画布</span><span>高冲击</span></div>
+          </div>
+        </button>
+
+        <button class="option theme-minimax" type="button" data-style="minimax">
+          <div class="preview"></div>
+          <div class="option-copy">
+            <h2>MiniMax AI Matrix</h2>
+            <p>黑白主结构搭配高饱和产品色块，像 AI 基建产品矩阵，视觉记忆点强。</p>
+            <div class="tags"><span>AI 产品感</span><span>高饱和</span><span>矩阵</span></div>
+          </div>
+        </button>
+
+        <button class="option theme-stripe" type="button" data-style="stripe">
+          <div class="preview"></div>
+          <div class="option-copy">
+            <h2>Stripe Gradient Infra</h2>
+            <p>金融科技/基础设施感，精致渐变、蓝紫色数据层，非常像专业 SaaS 控制台。</p>
+            <div class="tags"><span>Fintech</span><span>渐变科技</span><span>专业</span></div>
+          </div>
+        </button>
+
+        <button class="option theme-runway" type="button" data-style="runway">
+          <div class="preview"></div>
+          <div class="option-copy">
+            <h2>Runway Cinematic Lab</h2>
+            <p>电影实验室气质，黑白强对比、画面感更强，适合做很酷的 AI 使用仪表盘。</p>
+            <div class="tags"><span>电影感</span><span>AI Lab</span><span>高级黑</span></div>
+          </div>
+        </button>
+
+        <button class="option theme-eleven" type="button" data-style="eleven">
+          <div class="preview"></div>
+          <div class="option-copy">
+            <h2>ElevenLabs Editorial AI</h2>
+            <p>杂志式 AI 产品风，浅色、柔和、空气感强，比纯工具看板更有品牌感。</p>
+            <div class="tags"><span>编辑感</span><span>柔和高级</span><span>品牌感</span></div>
+          </div>
+        </button>
+      </div>
+
+      <aside class="detail theme-raycast" id="detail">
+        <div class="preview detail-preview" id="detailPreview"></div>
+        <h2 id="detailTitle">Raycast Command Center</h2>
+        <p id="detailDesc">最适合本地 Mac 工具。深色命令面板、细边框、高信息密度，科技感强但不花。</p>
+        <div class="detail-list">
+          <div><span>适配程度</span><strong id="fit">最高</strong></div>
+          <div><span>视觉关键词</span><strong id="keywords">近黑、细边框、命令面板</strong></div>
+          <div><span>改动风险</span><strong id="risk">中低，只改 CSS 为主</strong></div>
+          <div><span>我的建议</span><strong id="suggestion">先做这个</strong></div>
+        </div>
+        <div class="note">这页只是风格预览，不会改主看板。你选定一个后，我会先做可回退版本，再打开主界面给你看。</div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const previewMarkup = `
+      <div class="mini-top">
+        <div class="mini-brand"><span class="mini-mark"></span><span>CodexScope</span></div>
+        <div class="mini-tabs"><span></span><span></span><span></span></div>
+      </div>
+      <div class="mini-main">
+        <div class="mini-summary">
+          <div class="mini-card"><div class="mini-label"></div><div class="mini-value"></div></div>
+          <div class="mini-card"><div class="mini-label"></div><div class="mini-value"></div></div>
+          <div class="mini-card"><div class="mini-label"></div><div class="mini-value"></div></div>
+          <div class="mini-card"><div class="mini-label"></div><div class="mini-value"></div></div>
+        </div>
+        <div class="mini-chart">
+          <svg class="mini-line" viewBox="0 0 220 80" aria-hidden="true">
+            <path d="M4 62 C34 54 46 42 72 45 S118 56 142 38 S176 12 216 18"></path>
+          </svg>
+          <div class="mini-row"><span class="mini-dot"></span><span class="mini-bar"><span style="--w:72%"></span></span><span class="mini-num"></span></div>
+        </div>
+        <div class="mini-side">
+          <div class="mini-row"><span class="mini-dot"></span><span class="mini-bar"><span style="--w:86%"></span></span><span class="mini-num"></span></div>
+          <div class="mini-row"><span class="mini-dot"></span><span class="mini-bar"><span style="--w:64%"></span></span><span class="mini-num"></span></div>
+          <div class="mini-row"><span class="mini-dot"></span><span class="mini-bar"><span style="--w:38%"></span></span><span class="mini-num"></span></div>
+          <div class="mini-row"><span class="mini-dot"></span><span class="mini-bar"><span style="--w:51%"></span></span><span class="mini-num"></span></div>
+        </div>
+      </div>
+    `;
+
+    const detailData = {
+      raycast: {
+        title: "Raycast Command Center",
+        desc: "最适合本地 Mac 工具。深色命令面板、细边框、高信息密度，科技感强但不花。",
+        fit: "最高",
+        keywords: "近黑、细边框、命令面板",
+        risk: "中低，只改 CSS 为主",
+        suggestion: "先做这个",
+      },
+      vercel: {
+        title: "Vercel Console Minimal",
+        desc: "白底极简工程感。适合想让数据更清楚、商务汇报更干净的版本。",
+        fit: "中高",
+        keywords: "白底、影子边框、极简",
+        risk: "中，需要重新平衡深浅模式",
+        suggestion: "适合汇报版",
+      },
+      apple: {
+        title: "Apple System Glass",
+        desc: "最贴近 macOS 原生感。柔和、留白多、蓝色交互清晰，但数据密度会降低。",
+        fit: "中",
+        keywords: "SF Pro、柔和留白、系统蓝",
+        risk: "中，可能显得不够专业看板",
+        suggestion: "适合轻量版",
+      },
+      linear: {
+        title: "Linear Precision",
+        desc: "适合做成工程管理中控台。层级清楚、紫色点缀、整体更冷静精准。",
+        fit: "中高",
+        keywords: "精准、暗紫、任务工具",
+        risk: "中低，和现有结构兼容",
+        suggestion: "第二选择",
+      },
+      warp: {
+        title: "Warp Warm Terminal",
+        desc: "温暖暗色终端风。没有强烈荧光，更沉稳，适合长时间开着看。",
+        fit: "中",
+        keywords: "暖黑、终端、低刺激",
+        risk: "低，但科技感会更克制",
+        suggestion: "适合耐看版",
+      },
+      framer: {
+        title: "Framer Black Artboard",
+        desc: "黑色画布、白色大字、蓝色选择态和少量高饱和渐变卡片，设计冲击力最强。",
+        fit: "高",
+        keywords: "黑色画布、渐变卡片、海报感",
+        risk: "中高，需要控制别太像营销页",
+        suggestion: "最有设计冲击",
+      },
+      minimax: {
+        title: "MiniMax AI Matrix",
+        desc: "黑白主结构搭配高饱和产品色块，像 AI 基建产品矩阵，视觉记忆点强。",
+        fit: "中高",
+        keywords: "AI 产品矩阵、彩色模型卡、黑白结构",
+        risk: "中，颜色多但可控",
+        suggestion: "适合更像 AI 平台",
+      },
+      stripe: {
+        title: "Stripe Gradient Infra",
+        desc: "金融科技/基础设施感，精致渐变、蓝紫色数据层，非常像专业 SaaS 控制台。",
+        fit: "中高",
+        keywords: "蓝紫渐变、基础设施、专业 SaaS",
+        risk: "中，容易变成常见科技蓝紫",
+        suggestion: "适合商业化版本",
+      },
+      runway: {
+        title: "Runway Cinematic Lab",
+        desc: "电影实验室气质，黑白强对比、画面感更强，适合做很酷的 AI 使用仪表盘。",
+        fit: "中",
+        keywords: "电影感、高级黑、AI Lab",
+        risk: "中高，数据密度会稍降",
+        suggestion: "适合酷炫展示版",
+      },
+      eleven: {
+        title: "ElevenLabs Editorial AI",
+        desc: "杂志式 AI 产品风，浅色、柔和、空气感强，比纯工具看板更有品牌感。",
+        fit: "中",
+        keywords: "编辑感、柔和浅色、品牌高级感",
+        risk: "中，工具感会弱一点",
+        suggestion: "适合品牌展示版",
+      },
+    };
+
+    document.querySelectorAll(".preview").forEach((el) => {
+      el.innerHTML = previewMarkup;
+    });
+
+    const options = document.querySelectorAll(".option");
+    const detail = document.getElementById("detail");
+    const setStyle = (style) => {
+      const data = detailData[style];
+      options.forEach((option) => option.classList.toggle("active", option.dataset.style === style));
+      detail.className = `detail theme-${style}`;
+      document.getElementById("detailTitle").textContent = data.title;
+      document.getElementById("detailDesc").textContent = data.desc;
+      document.getElementById("fit").textContent = data.fit;
+      document.getElementById("keywords").textContent = data.keywords;
+      document.getElementById("risk").textContent = data.risk;
+      document.getElementById("suggestion").textContent = data.suggestion;
+    };
+
+    options.forEach((option) => {
+      option.addEventListener("click", () => setStyle(option.dataset.style));
+    });
+  </script>
+</body>
+</html>

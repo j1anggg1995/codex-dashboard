@@ -8,9 +8,9 @@ generator="./codexscope-darwin-arm64"
 cache_path=".codexscope-cache.json"
 data_path="data.js"
 
-if [ -f "CodexScope Files/app/index.html" ]; then
-  dashboard_dir="$PWD/CodexScope Files/app"
-  generator="./CodexScope Files/bin/codexscope-darwin-arm64"
+if [ -f "codex看板 Files/app/index.html" ]; then
+  dashboard_dir="$PWD/codex看板 Files/app"
+  generator="./codex看板 Files/bin/codexscope-darwin-arm64"
   cache_path="$dashboard_dir/.codexscope-cache.json"
   data_path="$dashboard_dir/data.js"
 elif [ -f "app/index.html" ]; then
@@ -48,7 +48,7 @@ if command -v go >/dev/null 2>&1; then
   ./codexscope-generator --out "$data_path" --cache "$cache_path"
 else
   echo "No prebuilt generator was found, and Go is not installed."
-  echo "Please download CodexScope-mac.zip from the GitHub Releases page."
+  echo "Please download codex看板-mac.zip from the GitHub Releases page."
   exit 1
 fi
 

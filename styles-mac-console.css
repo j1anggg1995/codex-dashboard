@@ -1,0 +1,1585 @@
+/*
+  Mac Console Minimal skin for codex看板.
+  Uses a restrained Apple/Vercel/Linear-inspired system layer and follows the
+  user's macOS light/dark preference.
+*/
+
+:root {
+  color-scheme: light dark;
+  --mc-bg: #f5f5f7;
+  --mc-bg-2: #ffffff;
+  --mc-topbar: rgba(255, 255, 255, 0.78);
+  --mc-surface: rgba(255, 255, 255, 0.9);
+  --mc-surface-strong: #ffffff;
+  --mc-control: rgba(255, 255, 255, 0.78);
+  --mc-control-active: var(--mc-accent);
+  --mc-line: rgba(0, 0, 0, 0.1);
+  --mc-line-soft: rgba(0, 0, 0, 0.06);
+  --mc-text: #1d1d1f;
+  --mc-muted: #6e6e73;
+  --mc-muted-2: #9a9aa0;
+  --mc-accent: #007aff;
+  --mc-accent-2: #5e5ce6;
+  --mc-accent-soft: rgba(0, 122, 255, 0.1);
+  --mc-success: #34c759;
+  --mc-warning: #ff9f0a;
+  --mc-danger: #ff3b30;
+  --mc-shadow: 0 14px 34px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --mc-shadow-soft: 0 8px 22px rgba(15, 23, 42, 0.05);
+  --mc-blur: saturate(180%) blur(18px);
+
+  --bg: var(--mc-bg);
+  --panel: var(--mc-surface);
+  --panel-solid: var(--mc-surface-strong);
+  --line: var(--mc-line);
+  --line-soft: var(--mc-line-soft);
+  --text: var(--mc-text);
+  --muted: var(--mc-muted);
+  --muted-2: var(--mc-muted-2);
+  --blue: var(--mc-accent);
+  --blue-2: #2997ff;
+  --blue-soft: var(--mc-accent-soft);
+  --teal: #00a7a7;
+  --sky: #64a8ff;
+  --violet: var(--mc-accent-2);
+  --amber: var(--mc-warning);
+  --green: var(--mc-success);
+  --red: var(--mc-danger);
+  --shadow: var(--mc-shadow);
+  --radius: 8px;
+
+  --framer-chart-total: var(--mc-accent);
+  --framer-chart-input: #64a8ff;
+  --framer-chart-cache: #00a7a7;
+  --framer-chart-output: var(--mc-accent-2);
+  --framer-chart-reasoning: #8e8ef6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mc-bg: #101012;
+    --mc-bg-2: #151518;
+    --mc-topbar: rgba(18, 18, 20, 0.78);
+    --mc-surface: rgba(28, 28, 31, 0.86);
+    --mc-surface-strong: #1c1c1f;
+    --mc-control: rgba(45, 45, 49, 0.78);
+    --mc-control-active: var(--mc-accent);
+    --mc-line: rgba(255, 255, 255, 0.13);
+    --mc-line-soft: rgba(255, 255, 255, 0.08);
+    --mc-text: #f5f5f7;
+    --mc-muted: #a1a1a6;
+    --mc-muted-2: #77777e;
+    --mc-accent: #0a84ff;
+    --mc-accent-2: #8e8eff;
+    --mc-accent-soft: rgba(10, 132, 255, 0.15);
+    --mc-success: #30d158;
+    --mc-warning: #ffd60a;
+    --mc-danger: #ff6961;
+    --mc-shadow: 0 22px 64px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    --mc-shadow-soft: 0 12px 36px rgba(0, 0, 0, 0.2);
+
+    --teal: #4adebc;
+    --sky: #8ab4f8;
+    --framer-chart-total: var(--mc-accent);
+    --framer-chart-cache: #4adebc;
+    --framer-chart-reasoning: #b59cff;
+  }
+}
+
+html,
+body {
+  background: var(--mc-bg) !important;
+  color: var(--mc-text) !important;
+}
+
+body {
+  background:
+    linear-gradient(180deg, var(--mc-bg-2) 0%, var(--mc-bg) 42%, var(--mc-bg) 100%) !important;
+  font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", sans-serif !important;
+}
+
+body::before {
+  display: none !important;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--mc-accent) 28%, transparent);
+}
+
+.app {
+  background: transparent !important;
+}
+
+.topbar {
+  background: var(--mc-topbar) !important;
+  border-bottom: 1px solid var(--mc-line) !important;
+  box-shadow: none !important;
+  backdrop-filter: var(--mc-blur);
+  -webkit-backdrop-filter: var(--mc-blur);
+}
+
+.brand {
+  color: var(--mc-text) !important;
+  font-weight: 680 !important;
+  letter-spacing: 0 !important;
+}
+
+.brand-mark {
+  border-radius: 9px !important;
+  background: linear-gradient(180deg, #2997ff, var(--mc-accent)) !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34), 0 6px 16px rgba(0, 122, 255, 0.18) !important;
+}
+
+.brand-mark svg {
+  display: block !important;
+}
+
+.brand-mark svg path {
+  fill: currentColor !important;
+}
+
+.brand-mark svg path:nth-child(1) {
+  opacity: 0.2;
+}
+
+.brand-mark svg path:nth-child(2) {
+  opacity: 0.96;
+}
+
+.brand-mark svg path:nth-child(3) {
+  opacity: 0.5;
+}
+
+.tab {
+  color: var(--mc-muted) !important;
+  font-weight: 600 !important;
+}
+
+.tab:hover,
+.tab.active {
+  color: var(--mc-text) !important;
+}
+
+.tab.active::after {
+  height: 2px !important;
+  background: var(--mc-accent) !important;
+}
+
+.sources,
+.sync,
+.icon-action,
+.period-btn,
+.custom-range input,
+.trend-toggle,
+.dist-toggle,
+.currency-toggle,
+.session-toggle,
+.cost-help,
+.drawer-close {
+  border: 1px solid var(--mc-line) !important;
+  background: var(--mc-control) !important;
+  color: var(--mc-text) !important;
+  box-shadow: none !important;
+  backdrop-filter: var(--mc-blur);
+  -webkit-backdrop-filter: var(--mc-blur);
+}
+
+.sources {
+  width: min(480px, 100%) !important;
+  max-width: 480px !important;
+}
+
+.source-chip {
+  flex: 0 1 auto !important;
+  color: var(--mc-muted) !important;
+}
+
+.source-chip::before {
+  background: var(--mc-muted-2) !important;
+}
+
+.source-chip.primary {
+  color: var(--mc-accent) !important;
+}
+
+.source-chip.primary::before,
+.sync svg {
+  background: var(--mc-accent) !important;
+  color: var(--mc-accent) !important;
+}
+
+.icon-action:hover,
+.icon-action.active,
+.icon-action[aria-expanded="true"],
+.period-btn:hover {
+  border-color: color-mix(in srgb, var(--mc-accent) 42%, var(--mc-line)) !important;
+  color: var(--mc-accent) !important;
+  background: var(--mc-accent-soft) !important;
+}
+
+.period-btn.active,
+.trend-mode.active,
+.trend-scale.active,
+.dist-mode.active,
+.session-mode.active,
+.currency-mode.active {
+  background: var(--mc-control-active) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+}
+
+main {
+  padding-top: 18px !important;
+}
+
+.grid {
+  gap: 14px !important;
+}
+
+.panel,
+.metric,
+.coverage,
+.settings-drawer {
+  border: 1px solid var(--mc-line) !important;
+  background: var(--mc-surface) !important;
+  box-shadow: var(--mc-shadow) !important;
+  color: var(--mc-text) !important;
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+}
+
+.panel:hover,
+.metric:hover {
+  border-color: color-mix(in srgb, var(--mc-accent) 22%, var(--mc-line)) !important;
+}
+
+.panel-title,
+.insight-head,
+.settings-title {
+  border-color: var(--mc-line-soft) !important;
+}
+
+.panel-title h2,
+.panel-title h3,
+.metric h3,
+.insight-head h2,
+.settings-title h2 {
+  color: var(--mc-text) !important;
+  font-weight: 660 !important;
+  letter-spacing: 0 !important;
+}
+
+.panel-title span,
+.forecast,
+.badge,
+.hint,
+.metric-footer,
+.metric .delta,
+.cost-source,
+.settings-title p,
+.settings-note,
+.list-empty,
+.session-head,
+.project-meta,
+.cost-kicker,
+.speed-note,
+.speed-stat span {
+  color: var(--mc-muted) !important;
+}
+
+.badge,
+.hint,
+.cost-help {
+  border-color: var(--mc-line) !important;
+  background: var(--mc-control) !important;
+}
+
+.hint,
+.cost-help {
+  display: inline-grid !important;
+  place-items: center;
+  width: 18px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+}
+
+.insight-panel {
+  position: relative;
+  overflow: hidden;
+  background: var(--mc-surface) !important;
+}
+
+.insight-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--mc-accent-soft), transparent 38%) !important;
+  opacity: 0.48;
+}
+
+.insight-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.insight-card {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--mc-line) !important;
+  background: color-mix(in srgb, var(--mc-surface-strong) 82%, transparent) !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+.insight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--mc-accent);
+  opacity: 0.72;
+}
+
+.insight-card span,
+.insight-card small {
+  color: var(--mc-muted) !important;
+}
+
+.insight-card strong,
+.metric-value,
+.cost-total,
+.speed-primary strong,
+.speed-orb b {
+  color: var(--mc-text) !important;
+  letter-spacing: 0 !important;
+}
+
+.insight-card strong {
+  overflow-wrap: anywhere;
+}
+
+.insight-badge {
+  border-color: var(--mc-line) !important;
+  background: var(--mc-control) !important;
+  color: var(--mc-muted) !important;
+}
+
+.insight-badge[data-tone="safe"],
+.insight-badge[data-tone="ok"],
+.insight-badge[data-tone="good"] {
+  border-color: color-mix(in srgb, var(--mc-success) 42%, var(--mc-line)) !important;
+  background: color-mix(in srgb, var(--mc-success) 13%, transparent) !important;
+  color: var(--mc-success) !important;
+}
+
+.insight-badge[data-tone="warn"] {
+  border-color: color-mix(in srgb, var(--mc-warning) 46%, var(--mc-line)) !important;
+  background: color-mix(in srgb, var(--mc-warning) 15%, transparent) !important;
+  color: var(--mc-warning) !important;
+}
+
+.chart-wrap,
+.distribution-chart,
+.cost-chart,
+.speed-bars,
+.ringbox,
+.project-list,
+.rank-list,
+.model-list,
+.risk-list,
+.cost-summary,
+.cost-composition,
+.cost-trend,
+.speed-hero,
+.speed-stat,
+.speed-bottom > div,
+.settings-section {
+  border-color: var(--mc-line-soft) !important;
+  background: color-mix(in srgb, var(--mc-surface-strong) 54%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.axis-line,
+.grid-line {
+  stroke: var(--mc-line-soft) !important;
+}
+
+.chart-label,
+.axis-label,
+.tooltip-label {
+  fill: var(--mc-muted) !important;
+}
+
+.tooltip-box {
+  fill: var(--mc-surface-strong) !important;
+  stroke: var(--mc-line) !important;
+}
+
+.tooltip-label {
+  fill: var(--mc-text) !important;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.peak-ring {
+  fill: var(--mc-surface-strong) !important;
+}
+
+.legend-item,
+.cost-part,
+.cost-model-row,
+.speed-model-row,
+.project-row,
+.session-row,
+.risk-row,
+.data-row,
+.setting-row {
+  border-color: var(--mc-line-soft) !important;
+  background: transparent !important;
+  color: var(--mc-text) !important;
+}
+
+.check,
+.dot,
+.cost-name i,
+.risk-icon {
+  box-shadow: none !important;
+}
+
+.check.on,
+.dot,
+.cost-name i,
+.risk-icon,
+.fill {
+  background: var(--mc-accent) !important;
+}
+
+.check.total,
+.check.on.total,
+.tone-white,
+.fill.tone-white {
+  background: var(--mc-text) !important;
+}
+
+.check.cache,
+.check.input,
+.tone-blue,
+.fill.tone-blue {
+  background: var(--mc-accent) !important;
+}
+
+.check.output,
+.tone-violet,
+.fill.tone-violet {
+  background: var(--mc-accent-2) !important;
+}
+
+.check.reasoning,
+.tone-magenta,
+.fill.tone-magenta {
+  background: #8e8ef6 !important;
+}
+
+.tone-danger,
+.fill.tone-danger {
+  background: var(--mc-danger) !important;
+}
+
+.splitbar,
+.cost-stack,
+.quota-row .track,
+.quota-risk-list .risk-row .track,
+.cost-model-row .bar,
+.project-meter,
+.mini-bar {
+  background: var(--mc-line-soft) !important;
+}
+
+.splitbar span:nth-child(1),
+.cost-input {
+  background: var(--mc-accent) !important;
+}
+
+.splitbar span:nth-child(2),
+.cost-cache {
+  background: #00a7a7 !important;
+}
+
+.splitbar span:nth-child(3),
+.cost-output {
+  background: var(--mc-accent-2) !important;
+}
+
+.splitbar span:nth-child(4),
+.cost-reasoning {
+  background: #8e8ef6 !important;
+}
+
+.metric-primary {
+  border-color: var(--mc-line) !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--mc-surface-strong) 96%, transparent), var(--mc-surface)) !important;
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.045),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62) !important;
+}
+
+.metric-primary:hover {
+  border-color: var(--mc-line) !important;
+}
+
+.metric-primary::before {
+  display: none !important;
+}
+
+.metric-primary h3 {
+  color: var(--mc-text) !important;
+  font-size: 15px !important;
+  font-weight: 680 !important;
+}
+
+.metric-primary .metric-value {
+  color: var(--mc-text) !important;
+  font-size: clamp(32px, 4vw, 38px) !important;
+  font-weight: 710 !important;
+}
+
+.metric-primary .splitbar {
+  height: 7px !important;
+  gap: 1px !important;
+  margin: 12px 0 8px !important;
+  border: 0 !important;
+  background: color-mix(in srgb, var(--mc-line-soft) 76%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.metric-primary .splitbar span {
+  border-radius: 0 !important;
+  opacity: .88;
+}
+
+.metric-primary .splitbar span:first-child {
+  border-radius: 999px 0 0 999px !important;
+}
+
+.metric-primary .splitbar span:last-child {
+  border-radius: 0 999px 999px 0 !important;
+}
+
+.metric-primary .splitbar span:nth-child(1),
+.metric-primary .split-legend span:nth-child(1) .dot {
+  background: color-mix(in srgb, var(--mc-accent) 86%, #ffffff) !important;
+}
+
+.metric-primary .splitbar span:nth-child(2),
+.metric-primary .split-legend span:nth-child(2) .dot {
+  background: #30b7c8 !important;
+}
+
+.metric-primary .splitbar span:nth-child(3),
+.metric-primary .split-legend span:nth-child(3) .dot {
+  background: #7aa7f7 !important;
+}
+
+.metric-primary .splitbar span:nth-child(4),
+.metric-primary .split-legend span:nth-child(4) .dot {
+  background: #8f8cf4 !important;
+}
+
+.metric-primary .split-legend {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px !important;
+  color: var(--mc-muted) !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+
+.metric-primary .split-legend span {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+
+.metric-primary .split-legend .dot {
+  width: 7px !important;
+  height: 7px !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+
+.metric-primary .split-legend b {
+  display: inline !important;
+  margin-top: 0 !important;
+  margin-left: 1px;
+  color: var(--mc-text) !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+}
+
+.lower .panel:nth-child(4),
+#optimizationPanel {
+  background: var(--mc-surface) !important;
+}
+
+#optimizationPanel .speed-content {
+  gap: 12px !important;
+}
+
+#optimizationPanel .speed-hero {
+  --speed-tone: var(--mc-accent);
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px) !important;
+  min-height: 0 !important;
+  gap: 18px !important;
+  align-items: stretch !important;
+  padding: 16px !important;
+  border-radius: 12px !important;
+  border-color: color-mix(in srgb, var(--speed-tone) 18%, var(--mc-line)) !important;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--speed-tone) 8%, transparent), transparent 52%),
+    color-mix(in srgb, var(--mc-surface-strong) 76%, transparent) !important;
+}
+
+#optimizationPanel .speed-hero.good {
+  --speed-tone: var(--mc-success);
+}
+
+#optimizationPanel .speed-hero.ok {
+  --speed-tone: var(--mc-accent);
+}
+
+#optimizationPanel .speed-hero.warn {
+  --speed-tone: var(--mc-warning);
+}
+
+#optimizationPanel .speed-hero.danger {
+  --speed-tone: var(--mc-danger);
+}
+
+#optimizationPanel .speed-primary {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#optimizationPanel .speed-primary span,
+#optimizationPanel .speed-stat span,
+#optimizationPanel .speed-section-head span,
+#optimizationPanel .speed-model-row small,
+#optimizationPanel .speed-status span,
+#optimizationPanel .speed-status small,
+#optimizationPanel .speed-guide span {
+  color: var(--mc-muted) !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+}
+
+#optimizationPanel .speed-score-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+  margin-top: 6px;
+}
+
+#optimizationPanel .speed-score-line strong {
+  display: inline !important;
+  margin: 0 !important;
+  color: var(--mc-text) !important;
+  font-size: clamp(34px, 4vw, 46px) !important;
+  line-height: .96 !important;
+  font-weight: 720 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+#optimizationPanel .speed-score-line b {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--speed-tone) 36%, var(--mc-line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--speed-tone) 9%, transparent);
+  color: var(--speed-tone);
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 720;
+}
+
+#optimizationPanel .speed-primary small {
+  max-width: 760px;
+  margin-top: 10px !important;
+  color: var(--mc-muted) !important;
+  font-size: 13px !important;
+  line-height: 1.42 !important;
+  font-weight: 600 !important;
+}
+
+#optimizationPanel .speed-status {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--mc-line-soft);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--mc-surface-strong) 66%, transparent);
+}
+
+#optimizationPanel .speed-status strong {
+  color: var(--speed-tone);
+  font-size: 20px;
+  line-height: 1.1;
+  font-weight: 720;
+}
+
+#optimizationPanel .speed-score-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--mc-line-soft);
+}
+
+#optimizationPanel .speed-score-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--speed-tone), color-mix(in srgb, var(--speed-tone) 66%, #ffffff));
+}
+
+#optimizationPanel .speed-grid {
+  gap: 12px !important;
+}
+
+#optimizationPanel .speed-stat {
+  min-height: 112px;
+  padding: 15px !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--mc-surface-strong) 70%, transparent) !important;
+}
+
+#optimizationPanel .speed-stat strong {
+  margin-top: 10px !important;
+  color: var(--mc-text) !important;
+  font-size: clamp(24px, 2.5vw, 32px) !important;
+  line-height: 1 !important;
+  font-weight: 720 !important;
+}
+
+#optimizationPanel .speed-stat small {
+  margin-top: 9px !important;
+  color: var(--mc-muted) !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  font-weight: 600 !important;
+}
+
+#optimizationPanel .speed-bottom {
+  grid-template-columns: minmax(0, 1.08fr) minmax(310px, .92fr) !important;
+  gap: 12px !important;
+}
+
+#optimizationPanel .speed-bottom > div {
+  min-height: 244px;
+  padding: 15px !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--mc-surface-strong) 70%, transparent) !important;
+}
+
+#optimizationPanel .speed-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--mc-line-soft);
+}
+
+#optimizationPanel .speed-section-head h4 {
+  margin: 0 !important;
+  color: var(--mc-text);
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 680;
+}
+
+#optimizationPanel .speed-section-head span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  white-space: nowrap;
+}
+
+#optimizationPanel .speed-bars {
+  flex: 1;
+  min-height: 104px !important;
+  height: 104px;
+  align-items: end !important;
+  gap: 8px !important;
+  padding: 16px 2px 20px !important;
+  border-top: 0 !important;
+  background:
+    repeating-linear-gradient(to top, transparent 0 25px, var(--mc-line-soft) 26px),
+    transparent !important;
+}
+
+#optimizationPanel .speed-bar {
+  height: var(--h) !important;
+  min-height: 3px;
+  border-radius: 7px 7px 3px 3px !important;
+  background: linear-gradient(180deg, var(--mc-accent), color-mix(in srgb, var(--mc-accent) 58%, var(--mc-accent-2))) !important;
+  box-shadow: none !important;
+}
+
+#optimizationPanel .speed-bar i {
+  display: none !important;
+  bottom: -18px !important;
+  color: var(--mc-muted) !important;
+  font-size: 11px !important;
+  font-weight: 600;
+}
+
+#optimizationPanel .speed-bar:first-child i,
+#optimizationPanel .speed-bar:last-child i {
+  display: block !important;
+}
+
+#optimizationPanel .speed-model-list {
+  gap: 0 !important;
+  margin-top: 2px;
+}
+
+#optimizationPanel .speed-model-row {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 5px 12px !important;
+  padding: 11px 0 !important;
+  border-bottom: 1px solid var(--mc-line-soft) !important;
+}
+
+#optimizationPanel .speed-model-row:last-child {
+  border-bottom: 0 !important;
+}
+
+#optimizationPanel .speed-model-row span {
+  color: var(--mc-text) !important;
+  font-size: 15px !important;
+  font-weight: 680 !important;
+}
+
+#optimizationPanel .speed-model-row strong {
+  color: var(--mc-accent) !important;
+  font-size: 15px !important;
+  font-weight: 720 !important;
+}
+
+#optimizationPanel .speed-guide {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--mc-line-soft);
+}
+
+#optimizationPanel .speed-guide div {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--mc-line-soft);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--mc-control) 74%, transparent);
+}
+
+#optimizationPanel .speed-guide strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--mc-text);
+  font-size: 13px;
+  line-height: 1.15;
+  font-weight: 680;
+}
+
+.bar span,
+.mini-bar span,
+.project-meter span,
+.dist-bar-fill,
+.cost-model-row .bar span {
+  background: linear-gradient(90deg, var(--mc-accent), var(--mc-accent-2)) !important;
+}
+
+.model-row .bar span.tone-blue {
+  background: var(--mc-accent) !important;
+}
+
+.model-row .bar span.tone-violet {
+  background: linear-gradient(90deg, var(--mc-accent), var(--mc-accent-2)) !important;
+}
+
+.model-row .bar span.tone-magenta {
+  background: #8e8ef6 !important;
+}
+
+.model-row .bar span.tone-white {
+  background: var(--mc-text) !important;
+}
+
+.risk-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  border: 1px solid var(--mc-line) !important;
+  border-radius: 7px !important;
+  color: #ffffff !important;
+}
+
+@media (prefers-color-scheme: light) {
+  .check.on.total,
+  .tone-white,
+  .fill.tone-white {
+    background: #1d1d1f !important;
+  }
+
+  .risk-icon {
+    color: #ffffff !important;
+  }
+}
+
+.risk-icon svg,
+.warning .ui-icon,
+.cost-footnote svg,
+.shield svg,
+.sync svg {
+  width: 16px;
+  height: 16px;
+}
+
+.risk-icon svg rect,
+.risk-icon svg circle,
+.risk-icon svg path,
+.warning .ui-icon path,
+.cost-footnote svg path,
+.shield svg path {
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 1.8 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+.quota-risk-list .warning,
+.cost-footnote,
+.speed-note,
+.settings-note {
+  border-color: color-mix(in srgb, var(--mc-accent) 20%, var(--mc-line)) !important;
+  background: var(--mc-accent-soft) !important;
+  color: var(--mc-text) !important;
+}
+
+.warning svg {
+  color: var(--mc-warning) !important;
+}
+
+.ring-bg {
+  stroke: var(--mc-line-soft) !important;
+}
+
+.ring-main {
+  stroke: var(--mc-accent) !important;
+}
+
+.ring-teal {
+  stroke: #00a7a7 !important;
+}
+
+.ring-sky {
+  stroke: var(--mc-accent-2) !important;
+}
+
+.shield {
+  color: var(--mc-success) !important;
+}
+
+.shield svg path:first-child {
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+.shield svg path:last-child {
+  stroke: currentColor !important;
+}
+
+.link {
+  color: var(--mc-accent) !important;
+}
+
+.settings-overlay {
+  background: rgba(0, 0, 0, 0.42) !important;
+  backdrop-filter: blur(8px);
+}
+
+.drawer-close {
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  border-radius: 10px !important;
+  color: var(--mc-text) !important;
+}
+
+.settings-section h3,
+.setting-row strong,
+.data-row span,
+.data-row code {
+  color: var(--mc-text) !important;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--mc-accent);
+}
+
+.cost-popover {
+  background: var(--mc-surface-strong) !important;
+  border-color: var(--mc-line) !important;
+  color: var(--mc-text) !important;
+  box-shadow: var(--mc-shadow) !important;
+}
+
+.price-table th,
+.price-table td {
+  border-color: var(--mc-line-soft) !important;
+}
+
+@media (max-width: 900px) {
+  #optimizationPanel .speed-hero,
+  #optimizationPanel .speed-grid,
+  #optimizationPanel .speed-bottom,
+  #optimizationPanel .speed-guide {
+    grid-template-columns: 1fr !important;
+  }
+
+  #optimizationPanel .speed-bottom > div {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  #optimizationPanel .speed-hero,
+  #optimizationPanel .speed-stat,
+  #optimizationPanel .speed-bottom > div {
+    padding: 13px !important;
+  }
+
+  #optimizationPanel .speed-score-line strong {
+    font-size: 36px !important;
+  }
+
+  #optimizationPanel .speed-status {
+    padding: 12px;
+  }
+
+  #optimizationPanel .speed-bars {
+    min-height: 92px !important;
+    height: 92px;
+    gap: 5px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  main {
+    padding-top: 12px !important;
+  }
+
+  .topbar {
+    background: var(--mc-topbar) !important;
+  }
+
+  .insight-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .insight-card strong {
+    font-size: clamp(23px, 8vw, 32px) !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .sources {
+    width: min(360px, 100%) !important;
+    max-width: 360px !important;
+  }
+}
+
+/* Final Mac-style override for the primary Token card. Keep this at the end so
+   older theme rules in styles.css cannot bring back the blue/teal hero card. */
+body .metrics > .metric.metric-primary {
+  border: 1px solid var(--mc-line) !important;
+  border-top-color: var(--mc-line) !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--mc-surface-strong) 98%, transparent), var(--mc-surface)) !important;
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.045),
+    inset 0 1px 0 rgba(255, 255, 255, 0.64) !important;
+}
+
+body .metrics > .metric.metric-primary::before {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: none !important;
+}
+
+body .metrics > .metric.metric-primary h3,
+body .metrics > .metric.metric-primary .metric-value {
+  color: var(--mc-text) !important;
+}
+
+body .metrics > .metric.metric-primary h3 {
+  font-size: 15px !important;
+  font-weight: 680 !important;
+}
+
+body .metrics > .metric.metric-primary .metric-value {
+  font-size: clamp(32px, 4vw, 38px) !important;
+  font-weight: 710 !important;
+  letter-spacing: 0 !important;
+}
+
+body .metrics > .metric.metric-primary .splitbar {
+  height: 7px !important;
+  gap: 1px !important;
+  margin: 12px 0 8px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--mc-line-soft) 82%, transparent) !important;
+  box-shadow: none !important;
+}
+
+body .metrics > .metric.metric-primary .splitbar span {
+  opacity: .86 !important;
+  border-radius: 0 !important;
+}
+
+body .metrics > .metric.metric-primary .splitbar span:first-child {
+  border-radius: 999px 0 0 999px !important;
+}
+
+body .metrics > .metric.metric-primary .splitbar span:last-child {
+  border-radius: 0 999px 999px 0 !important;
+}
+
+body .metrics > .metric.metric-primary .splitbar span:nth-child(1),
+body .metrics > .metric.metric-primary .split-legend span:nth-child(1) .dot {
+  background: #4f8df7 !important;
+}
+
+body .metrics > .metric.metric-primary .splitbar span:nth-child(2),
+body .metrics > .metric.metric-primary .split-legend span:nth-child(2) .dot {
+  background: #38b7c6 !important;
+}
+
+body .metrics > .metric.metric-primary .splitbar span:nth-child(3),
+body .metrics > .metric.metric-primary .split-legend span:nth-child(3) .dot {
+  background: #7aa7f7 !important;
+}
+
+body .metrics > .metric.metric-primary .splitbar span:nth-child(4),
+body .metrics > .metric.metric-primary .split-legend span:nth-child(4) .dot {
+  background: #908cf4 !important;
+}
+
+body .metrics > .metric.metric-primary .split-legend {
+  gap: 9px !important;
+  color: var(--mc-muted) !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+
+body .metrics > .metric.metric-primary .split-legend span {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+body .metrics > .metric.metric-primary .split-legend .dot {
+  width: 7px !important;
+  height: 7px !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+
+body .metrics > .metric.metric-primary .split-legend b {
+  display: inline !important;
+  margin: 0 0 0 1px !important;
+  color: var(--mc-text) !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+
+/* Cost panel compact macOS treatment. CNY values are wider than USD values, so
+   the composition grid uses two columns instead of forcing four cramped cells. */
+body #costPanel .panel-title h3 {
+  font-size: 19px !important;
+  font-weight: 680 !important;
+}
+
+body #costPanel .cost-source {
+  font-size: 13px !important;
+  font-weight: 620 !important;
+}
+
+body #costPanel .currency-mode {
+  height: 32px !important;
+  min-width: 48px !important;
+  padding: 0 12px !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+}
+
+body #costPanel .cost-summary {
+  padding: 12px 14px !important;
+  border-color: var(--mc-line) !important;
+  background: color-mix(in srgb, var(--mc-surface-strong) 78%, transparent) !important;
+}
+
+body #costPanel .cost-kicker,
+body #costPanel .cost-name {
+  color: var(--mc-muted) !important;
+  font-size: 12px !important;
+  font-weight: 620 !important;
+}
+
+body #costPanel .cost-total {
+  margin-top: 8px !important;
+  color: var(--mc-text) !important;
+  font-size: clamp(28px, 3vw, 34px) !important;
+  font-weight: 690 !important;
+  letter-spacing: 0 !important;
+}
+
+body #costPanel .cost-stats {
+  margin-top: 12px !important;
+  border-color: var(--mc-line-soft) !important;
+  background: color-mix(in srgb, var(--mc-control) 58%, transparent) !important;
+}
+
+body #costPanel .cost-stat {
+  grid-template-columns: 44px minmax(0, 1fr) !important;
+  padding: 8px 10px !important;
+  border-top-color: var(--mc-line-soft) !important;
+  color: var(--mc-text) !important;
+  font-size: 12px !important;
+}
+
+body #costPanel .cost-stat b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--mc-text) !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+}
+
+body #costPanel .cost-stat b small {
+  color: var(--mc-muted) !important;
+  font-size: 10px !important;
+}
+
+body #costPanel .cost-composition {
+  gap: 10px !important;
+}
+
+body #costPanel .cost-subtitle,
+body #costPanel .cost-mini-title {
+  color: var(--mc-text) !important;
+  font-size: 16px !important;
+  font-weight: 670 !important;
+}
+
+body #costPanel .cost-stack {
+  height: 10px !important;
+  border: 0 !important;
+  background: color-mix(in srgb, var(--mc-line-soft) 78%, transparent) !important;
+  box-shadow: none !important;
+}
+
+body #costPanel .cost-parts {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+body #costPanel .cost-part,
+body #costPanel .cost-part:first-child,
+body #costPanel .cost-part:nth-child(3) {
+  min-width: 0;
+  padding: 9px 10px !important;
+  border: 1px solid var(--mc-line-soft) !important;
+  border-radius: 10px !important;
+  background: color-mix(in srgb, var(--mc-surface-strong) 66%, transparent) !important;
+}
+
+body #costPanel .cost-name {
+  gap: 6px !important;
+}
+
+body #costPanel .cost-name i {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+body #costPanel .cost-value {
+  display: block;
+  min-width: 0;
+  margin-top: 6px !important;
+  overflow: hidden;
+  color: var(--mc-text) !important;
+  font-size: clamp(14px, 1.7vw, 16px) !important;
+  font-weight: 680 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.08 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body #costPanel .cost-percent,
+body #costPanel .cost-part:nth-child(2) .cost-percent,
+body #costPanel .cost-part:nth-child(3) .cost-percent,
+body #costPanel .cost-part:nth-child(4) .cost-percent {
+  margin-top: 6px !important;
+  padding: 3px 8px !important;
+  border-radius: 8px !important;
+  background: var(--mc-control) !important;
+  color: var(--mc-muted) !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+}
+
+body #costPanel .cost-footnote {
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+/* Keep the pricing help popover inside the viewport instead of letting the
+   cost card or narrow columns clip it. */
+body #costPanel .cost-help-wrap .cost-popover {
+  position: fixed !important;
+  top: 86px !important;
+  right: 22px !important;
+  left: auto !important;
+  width: min(520px, calc(100vw - 44px)) !important;
+  max-height: calc(100vh - 120px) !important;
+  padding: 12px !important;
+  overflow: auto !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--mc-surface-strong) 96%, transparent) !important;
+  box-shadow:
+    0 24px 58px rgba(15, 23, 42, .16),
+    inset 0 1px 0 rgba(255, 255, 255, .68) !important;
+  z-index: 2000 !important;
+}
+
+body #costPanel .cost-help-wrap .cost-popover::before {
+  content: none !important;
+  display: none !important;
+}
+
+body #costPanel .cost-popover b {
+  margin-bottom: 8px !important;
+  color: var(--mc-text) !important;
+  font-size: 13px !important;
+  font-weight: 680 !important;
+}
+
+body #costPanel .price-table {
+  width: 100% !important;
+  min-width: 0 !important;
+  table-layout: auto !important;
+  border-color: var(--mc-line-soft) !important;
+  border-radius: 10px !important;
+}
+
+body #costPanel .price-table th,
+body #costPanel .price-table td {
+  padding: 6px 8px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+body #costPanel .price-table th:first-child,
+body #costPanel .price-table td:first-child {
+  max-width: 176px;
+  white-space: normal !important;
+}
+
+body #costPanel .price-note,
+body #costPanel .cost-popover a {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+@media (max-width: 760px) {
+  body #costPanel .cost-help-wrap .cost-popover {
+    top: 72px !important;
+    right: 12px !important;
+    width: calc(100vw - 24px) !important;
+  }
+
+  body #costPanel .price-table th,
+  body #costPanel .price-table td {
+    padding: 6px !important;
+    font-size: 10px !important;
+  }
+}
+
+/* Hard viewport-bound placement for the price popover. The previous right
+   anchored popover could still be clipped when the dashboard column was narrow. */
+html body #costPanel .cost-help-wrap > .cost-popover {
+  position: fixed !important;
+  inset: 74px 18px auto 18px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  max-height: calc(100dvh - 98px) !important;
+  box-sizing: border-box !important;
+  overflow: auto !important;
+  transform: none !important;
+}
+
+html body #costPanel .cost-help-wrap > .cost-popover * {
+  box-sizing: border-box;
+}
+
+html body #costPanel .cost-help-wrap > .cost-popover b {
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+
+html body #costPanel .cost-help-wrap > .cost-popover .price-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+html body #costPanel .cost-help-wrap > .cost-popover .price-table th,
+html body #costPanel .cost-help-wrap > .cost-popover .price-table td {
+  white-space: normal !important;
+}
+
+html body #costPanel .cost-help-wrap > .cost-popover .price-table th:first-child,
+html body #costPanel .cost-help-wrap > .cost-popover .price-table td:first-child {
+  width: 42% !important;
+  max-width: none !important;
+  overflow-wrap: anywhere;
+}
+
+html body #costPanel .cost-help-wrap > .cost-popover .price-table th:not(:first-child),
+html body #costPanel .cost-help-wrap > .cost-popover .price-table td:not(:first-child) {
+  width: 19.333% !important;
+}
+
+/* Portaled pricing help: app.ts moves this node to <body> so it is no longer
+   trapped by the cost card's backdrop-filter containing block. */
+html body > #costHelpTip.cost-popover-floating {
+  position: fixed !important;
+  inset: 74px 18px auto 18px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  max-height: calc(100dvh - 98px) !important;
+  box-sizing: border-box !important;
+  overflow: auto !important;
+  transform: none !important;
+  z-index: 3000 !important;
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  border: 1px solid var(--mc-line) !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--mc-surface-strong) 96%, transparent) !important;
+  color: var(--mc-text) !important;
+  box-shadow:
+    0 24px 58px rgba(15, 23, 42, .18),
+    inset 0 1px 0 rgba(255, 255, 255, .68) !important;
+}
+
+html body.cost-help-open > #costHelpTip.cost-popover-floating {
+  display: block !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+html body > #costHelpTip.cost-popover-floating::before {
+  content: none !important;
+  display: none !important;
+}
+
+html body > #costHelpTip.cost-popover-floating * {
+  box-sizing: border-box;
+}
+
+html body > #costHelpTip.cost-popover-floating b {
+  margin-bottom: 8px !important;
+  color: var(--mc-text) !important;
+  font-size: 13px !important;
+  font-weight: 680 !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+
+html body > #costHelpTip.cost-popover-floating .price-table {
+  width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed !important;
+  border-color: var(--mc-line-soft) !important;
+}
+
+html body > #costHelpTip.cost-popover-floating .price-table th,
+html body > #costHelpTip.cost-popover-floating .price-table td {
+  padding: 6px 8px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+}
+
+html body > #costHelpTip.cost-popover-floating .price-table th:first-child,
+html body > #costHelpTip.cost-popover-floating .price-table td:first-child {
+  width: 42% !important;
+  max-width: none !important;
+  overflow-wrap: anywhere;
+}
+
+html body > #costHelpTip.cost-popover-floating .price-table th:not(:first-child),
+html body > #costHelpTip.cost-popover-floating .price-table td:not(:first-child) {
+  width: 19.333% !important;
+}
+
+html body > #costHelpTip.cost-popover-floating .price-note,
+html body > #costHelpTip.cost-popover-floating a {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+@media (max-width: 760px) {
+  html body > #costHelpTip.cost-popover-floating {
+    inset: 68px 12px auto 12px !important;
+    max-height: calc(100dvh - 84px) !important;
+  }
+
+  html body > #costHelpTip.cost-popover-floating .price-table th,
+  html body > #costHelpTip.cost-popover-floating .price-table td {
+    padding: 6px !important;
+    font-size: 10px !important;
+  }
+}

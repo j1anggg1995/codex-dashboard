@@ -42,7 +42,7 @@ function isVisibleInViewport(rect, height) {
 
     const report = await page.evaluate(() => {
       const app = document.querySelector(".app");
-      const visiblePanels = Array.from(document.querySelectorAll(".panel,.metric,.coverage"))
+      const visiblePanels = Array.from(document.querySelectorAll(".panel,.metric,.coverage,.insight-card"))
         .filter((el) => {
           const rect = el.getBoundingClientRect();
           return rect.bottom > 0 && rect.top < innerHeight;
@@ -67,7 +67,7 @@ function isVisibleInViewport(rect, height) {
           text: (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 80),
         }));
 
-      const clippedInPanels = Array.from(document.querySelectorAll(".panel,.metric,.coverage")).flatMap((panel) => {
+      const clippedInPanels = Array.from(document.querySelectorAll(".panel,.metric,.coverage,.insight-card")).flatMap((panel) => {
         const panelRect = panel.getBoundingClientRect();
         return Array.from(panel.querySelectorAll("*"))
           .filter((el) => {

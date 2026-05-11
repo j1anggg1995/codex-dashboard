@@ -7,11 +7,11 @@ set "GENERATOR=%cd%\codexscope-windows-amd64.exe"
 set "DATA_PATH=%cd%\data.js"
 set "CACHE_PATH=%cd%\.codexscope-cache.json"
 
-if exist "%cd%\CodexScope Files\app\index.html" (
-  set "DASHBOARD_DIR=%cd%\CodexScope Files\app"
-  set "GENERATOR=%cd%\CodexScope Files\bin\codexscope-windows-amd64.exe"
-  set "DATA_PATH=%cd%\CodexScope Files\app\data.js"
-  set "CACHE_PATH=%cd%\CodexScope Files\app\.codexscope-cache.json"
+if exist "%cd%\codex看板 Files\app\index.html" (
+  set "DASHBOARD_DIR=%cd%\codex看板 Files\app"
+  set "GENERATOR=%cd%\codex看板 Files\bin\codexscope-windows-amd64.exe"
+  set "DATA_PATH=%cd%\codex看板 Files\app\data.js"
+  set "CACHE_PATH=%cd%\codex看板 Files\app\.codexscope-cache.json"
 ) else if exist "%cd%\app\index.html" (
   set "DASHBOARD_DIR=%cd%\app"
   set "GENERATOR=%cd%\bin\codexscope-windows-amd64.exe"
@@ -37,7 +37,7 @@ if %errorlevel%==0 (
 )
 
 echo No prebuilt generator was found, and Go is not installed.
-echo Please download CodexScope-windows.zip from the GitHub Releases page.
+echo Please download codex看板-windows.zip from the GitHub Releases page.
 pause
 exit /b 1
 

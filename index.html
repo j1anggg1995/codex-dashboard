@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CodexScope</title>
-  <link rel="stylesheet" href="./styles.css">
+  <title>codex看板</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./styles.css?v=20260511-mac">
+  <link rel="stylesheet" href="./styles-mac-console.css?v=20260511-mac-cost-popover-3">
 </head>
 <body>
   <div class="app">
@@ -17,7 +19,7 @@
             <path d="M12 3.5 19 7.4l-7 4.2-7-4.2 7-3.9Z" fill="#1668f2"/>
           </svg>
         </span>
-        <span>CodexScope</span>
+        <span>codex看板</span>
       </div>
 
       <nav class="tabs" aria-label="主导航">
@@ -26,7 +28,7 @@
         <button class="tab" type="button" data-scroll-target="tokenPanel">Token</button>
         <button class="tab" type="button" data-scroll-target="sessionPanel">会话</button>
         <button class="tab" type="button" data-scroll-target="modelPanel">模型</button>
-        <button class="tab" type="button" data-scroll-target="quotaPanel">速率</button>
+        <button class="tab" type="button" data-scroll-target="optimizationPanel">速率</button>
       </nav>
 
       <div class="actions">
@@ -34,6 +36,10 @@
           <span class="source-chip primary" id="sourcePrimary">Codex 桌面端</span>
           <span class="source-chip" id="sourceSecondary">本地日志</span>
           <span class="source-chip" id="sourceTertiary">额度状态</span>
+        </div>
+        <div class="quick-actions" aria-label="快捷操作">
+          <button id="privacyToggle" class="icon-action" type="button" aria-pressed="false" title="隐藏项目和会话名称">隐私</button>
+          <button id="settingsButton" class="icon-action" type="button" aria-haspopup="dialog" aria-expanded="false" title="打开设置">设置</button>
         </div>
         <div class="date-filter" id="dateFilter" aria-label="日期筛选">
           <button class="period-btn" type="button" data-range="24h">近24小时</button>
@@ -59,7 +65,39 @@
     </header>
 
     <main>
-      <section id="overview" class="grid" aria-label="Codex 用量总览">
+      <section id="overview" class="grid" aria-label="codex看板用量总览">
+        <article id="insightPanel" class="panel insight-panel">
+          <div class="insight-head">
+            <div>
+              <h2>数据摘要</h2>
+              <p id="insightSubtitle">等待本地 Codex 数据</p>
+            </div>
+            <span id="insightRiskBadge" class="insight-badge">评估中</span>
+          </div>
+          <div class="insight-grid">
+            <div class="insight-card">
+              <span>消耗总 Token</span>
+              <strong id="insightTokenTotal">--</strong>
+              <small id="insightTokenNote">等待 token 数据</small>
+            </div>
+            <div class="insight-card">
+              <span>额度风险</span>
+              <strong id="insightRisk">--</strong>
+              <small id="insightRiskNote">等待额度数据</small>
+            </div>
+            <div class="insight-card">
+              <span>调用总量</span>
+              <strong id="insightCallTotal">--</strong>
+              <small id="insightCallNote">等待调用数据</small>
+            </div>
+            <div class="insight-card">
+              <span>缓存命中</span>
+              <strong id="insightCacheTotal">--</strong>
+              <small id="insightCacheNote">等待缓存数据</small>
+            </div>
+          </div>
+        </article>
+
         <article id="tokenPanel" class="panel">
           <div class="panel-title">
             <div class="trend-heading">
@@ -183,6 +221,16 @@
         </section>
 
         <section class="lower">
+          <article id="projectPanel" class="panel project-panel">
+            <div class="panel-title">
+              <h3>项目概览</h3>
+              <span id="projectSummary" class="badge">当前范围</span>
+            </div>
+            <div id="projectList" class="project-list">
+              <div class="list-empty">等待项目数据</div>
+            </div>
+          </article>
+
           <article id="sessionPanel" class="panel">
             <div class="panel-title session-title">
               <h3>会话排行</h3>
@@ -247,9 +295,63 @@
               <div class="list-empty">等待本地 token 用量</div>
             </div>
           </article>
+
+          <article id="optimizationPanel" class="panel optimization-panel">
+            <div class="panel-title">
+              <h3>速度判断</h3>
+              <span id="optimizationSummary" class="badge">当前范围</span>
+            </div>
+            <div id="optimizationContent" class="speed-content">
+              <div class="list-empty">等待本地调用数据</div>
+            </div>
+          </article>
         </section>
       </section>
     </main>
+    <div id="settingsOverlay" class="settings-overlay" hidden></div>
+    <aside id="settingsDrawer" class="settings-drawer" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" hidden>
+      <div class="settings-title">
+        <div>
+          <h2 id="settingsTitle">设置</h2>
+          <p>本地展示选项，不会上传你的 Codex 日志。</p>
+        </div>
+        <button id="settingsClose" class="drawer-close" type="button" aria-label="关闭设置">×</button>
+      </div>
+      <div class="settings-section">
+        <h3>隐私</h3>
+        <label class="setting-row">
+          <span><strong>截图隐私模式</strong><small>隐藏项目名、会话名和部分来源信息</small></span>
+          <input id="privacySetting" type="checkbox">
+        </label>
+      </div>
+      <div class="settings-section">
+        <h3>显示</h3>
+        <label class="setting-row">
+          <span><strong>显示费用统计</strong><small>费用只是基于公开价格的本地估算</small></span>
+          <input id="costSetting" type="checkbox" checked>
+        </label>
+        <label class="setting-row">
+          <span><strong>CNY 实时汇率</strong><small>切换 CNY 时请求 Frankfurter 汇率；关闭后使用离线兜底</small></span>
+          <input id="fxSetting" type="checkbox" checked>
+        </label>
+      </div>
+      <div class="settings-section">
+        <h3>数据</h3>
+        <div class="data-row">
+          <span>默认日志目录</span>
+          <code>~/.codex/sessions</code>
+        </div>
+        <div class="data-row">
+          <span>本地导出文件</span>
+          <code>data.js</code>
+        </div>
+        <div class="data-row">
+          <span>本地自动刷新</span>
+          <code>npm run serve</code>
+        </div>
+        <p class="settings-note">本地服务每 60 秒重建 <code>data.js</code>；清理缓存需要在 Finder 或终端删除 <code>.codexscope-cache.json</code>。</p>
+      </div>
+    </aside>
   </div>
   <script src="./data.sample.js"></script>
   <script src="./data.js"></script>
