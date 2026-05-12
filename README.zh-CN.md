@@ -24,7 +24,7 @@ npm run serve
 
 ## Release 包使用
 
-如果你下载的是 GitHub Releases 里的 `codex看板-mac.zip`：
+如果你下载的是 GitHub Releases 里的 `codex-dashboard-mac.zip`：
 
 1. 解压 zip。
 2. 双击 `Open codex看板.command`。

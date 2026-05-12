@@ -98,10 +98,10 @@ chmod +x "$MAC_DIR/Open codex看板.command" "$MAC_FILES_DIR/scripts/"*.mjs
 
 (
   cd "$DIST_DIR"
-  zip -qr "codex看板-mac.zip" "codex看板-mac"
-  zip -qr "codex看板-windows.zip" "codex看板-windows"
+  zip -qr "codex-dashboard-mac.zip" "codex看板-mac"
+  zip -qr "codex-dashboard-windows.zip" "codex看板-windows"
 )
 
 printf 'Built release packages:\n  %s\n  %s\n' \
-  "$DIST_DIR/codex看板-mac.zip" \
-  "$DIST_DIR/codex看板-windows.zip"
+  "$DIST_DIR/codex-dashboard-mac.zip" \
+  "$DIST_DIR/codex-dashboard-windows.zip"
