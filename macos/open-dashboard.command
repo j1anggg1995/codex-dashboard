@@ -3,53 +3,21 @@ set -e
 
 cd "$(dirname "$0")"
 
-dashboard_dir="$PWD"
-generator="./codexscope-darwin-arm64"
-cache_path=".codexscope-cache.json"
-data_path="data.js"
+files_dir="$PWD/codex看板 Files"
+url="http://127.0.0.1:4174/index.html"
 
-if [ -f "codex看板 Files/app/index.html" ]; then
-  dashboard_dir="$PWD/codex看板 Files/app"
-  generator="./codex看板 Files/bin/codexscope-darwin-arm64"
-  cache_path="$dashboard_dir/.codexscope-cache.json"
-  data_path="$dashboard_dir/data.js"
-elif [ -f "app/index.html" ]; then
-  dashboard_dir="$PWD/app"
-  generator="./bin/codexscope-darwin-arm64"
-  cache_path="$dashboard_dir/.codexscope-cache.json"
-  data_path="$dashboard_dir/data.js"
-elif [ ! -f index.html ]; then
-  cd ..
-  dashboard_dir="$PWD"
-fi
-
-if [ -f "$generator" ]; then
-  chmod +x "$generator" 2>/dev/null || true
-fi
-
-if [ -x "$generator" ] \
-  && { [ ! -f generate_codex_data.go ] || { [ "$generator" -nt generate_codex_data.go ] && [ "$generator" -nt go.mod ] && [ "$generator" -nt go.sum ]; }; } \
-  && "$generator" --out "$data_path" --cache "$cache_path"; then
-  open "$dashboard_dir/index.html"
-  exit 0
-fi
-
-if [ -x ./codexscope-generator ] \
-  && [ ./codexscope-generator -nt generate_codex_data.go ] \
-  && [ ./codexscope-generator -nt go.mod ] \
-  && [ ./codexscope-generator -nt go.sum ] \
-  && ./codexscope-generator --out "$data_path" --cache "$cache_path"; then
-  open "$dashboard_dir/index.html"
-  exit 0
-fi
-
-if command -v go >/dev/null 2>&1; then
-  go build -trimpath -ldflags="-s -w" -o ./codexscope-generator generate_codex_data.go
-  ./codexscope-generator --out "$data_path" --cache "$cache_path"
-else
-  echo "No prebuilt generator was found, and Go is not installed."
-  echo "Please download codex看板-mac.zip from the GitHub Releases page."
+if [ ! -f "$files_dir/index.html" ]; then
+  echo "找不到 codex看板 Files/index.html，请确认压缩包已经完整解压。"
   exit 1
 fi
 
-open "$dashboard_dir/index.html"
+if ! command -v node >/dev/null 2>&1; then
+  echo "这台 Mac 还没有安装 Node.js。"
+  echo "请先安装 Node.js 18 或更高版本，然后再双击打开。"
+  echo "下载地址：https://nodejs.org/"
+  exit 1
+fi
+
+cd "$files_dir"
+node scripts/start-local.mjs
+open "$url"

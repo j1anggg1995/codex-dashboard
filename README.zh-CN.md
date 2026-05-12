@@ -22,6 +22,17 @@ macOS 也可以双击根目录的 `start-codex-dashboard.command`，它会自动
 npm run serve
 ```
 
+## Release 包使用
+
+如果你下载的是 GitHub Releases 里的 `codex看板-mac.zip`：
+
+1. 解压 zip。
+2. 双击 `Open codex看板.command`。
+3. 如果 macOS 拦截，打开「系统设置 > 隐私与安全性」，点击「仍要打开」。
+4. 浏览器会打开 `http://127.0.0.1:4174/index.html`。
+
+Release 包同样会启动本地服务，并每 60 秒刷新一次数据。当前 Release 包需要本机已经安装 Node.js 18 或更高版本。
+
 ## 刷新机制
 
 - 本地服务每 60 秒重新生成一次 `data.js`。
