@@ -1,112 +1,94 @@
-# codex看板
+# codex-dashboard
 
-一个本地优先的 Codex 用量看板，用来查看 Token 消耗、额度风险、费用估算、模型占比、会话排行和体感速度。
+Local-first dashboard for Codex usage, quota risk, cost estimates, session analytics, and perceived speed.
 
-![codex看板预览](assets/codex-dashboard-preview.png)
+[中文说明](README.zh-CN.md) · [Download v0.1.0](https://github.com/j1anggg1995/codex-dashboard/releases/tag/v0.1.0)
 
-> 截图使用示例数据。真实运行时，数据来自你本机的 Codex 会话日志，不会上传到服务器。
+![codex-dashboard preview](assets/codex-dashboard-preview.png)
 
-## 适合谁用
+codex-dashboard reads Codex session logs from your own machine and turns them into a local dashboard. It is built for maintainers and heavy Codex users who want to understand where tokens go, which sessions or projects are expensive, whether quota risk is rising, and whether Codex is actually slow or only a few requests are slow.
 
-如果你经常使用 Codex，希望快速回答这些问题：
+The tool runs locally. It does not upload session logs to a hosted service.
 
-- 今天一共用了多少 Token？
-- 哪个项目、会话或模型最耗？
-- 当前有没有额度风险？
-- 费用大概是多少？
-- Codex 现在是“真慢”，还是只是某几个请求慢？
+## What It Shows
 
-这个看板就是为这种本地自查场景准备的。
+- **Usage summary**: total tokens, request count, success rate, cache hit rate, and risk state.
+- **Token trends**: input, output, cached, and reasoning token changes over time.
+- **Quota and risk**: 5-hour window, weekly quota, failure rate, and usage warnings.
+- **Cost estimates**: USD estimates from built-in public pricing, with optional CNY display conversion.
+- **Perceived speed**: first-token wait, slow requests, output throughput, and speed score.
+- **Rankings**: top projects, sessions, and models by token usage and request count.
+- **Privacy mode**: hide project names and session names for screenshots or demos.
+- **Light and dark mode**: follows the macOS appearance setting.
 
-## 核心功能
+## Why This Exists
 
-- **数据摘要**：总 Token、调用次数、成功率、缓存命中和风险状态。
-- **Token 趋势**：查看输入、输出、缓存、推理 token 的时间变化。
-- **额度与风险**：展示 5h 窗口、周额度、失败率和风险提示。
-- **费用统计**：按官方美元价估算，支持 CNY 展示换算。
-- **速度判断**：用体感速度分、开始等待、慢请求和每分钟输出量判断当前速度。
-- **排行分析**：项目、会话、模型排行，方便定位最耗的使用场景。
-- **隐私模式**：一键隐藏项目名和会话名，适合截图或演示。
-- **浅色/深色模式**：跟随 macOS 系统外观自动切换。
+Codex users often need fast answers to operational questions:
 
-## 快速开始
+- How many tokens did I use today?
+- Which project or model is driving usage?
+- Am I close to a quota window limit?
+- What is the rough cost profile of my local Codex work?
+- Is Codex slow globally, or did one session create the perception?
 
-先安装依赖：
+codex-dashboard makes those questions visible without sending local session data anywhere else.
+
+## Quick Start
+
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-启动本地服务：
+Start the local service:
 
 ```bash
 npm start
 ```
 
-然后打开：
+Open:
 
 ```text
 http://127.0.0.1:4174/index.html
 ```
 
-macOS 用户也可以直接双击：
+On macOS, you can also double-click:
 
 ```text
 start-codex-dashboard.command
 ```
 
-## Release 包使用
+## Release Packages
 
-如果你下载的是 GitHub Releases 里的 `codex-dashboard-mac.zip`：
+The v0.1.0 release includes downloadable packages:
 
-1. 解压 zip。
-2. 双击 `Open codex看板.command`。
-3. 如果 macOS 拦截，打开「系统设置 > 隐私与安全性」，点击「仍要打开」。
-4. 浏览器会打开 `http://127.0.0.1:4174/index.html`。
+- `codex-dashboard-mac.zip`
+- `codex-dashboard-windows.zip`
 
-Release 包同样会启动本地服务，并每 60 秒刷新一次数据。当前 Release 包需要本机已经安装 Node.js 18 或更高版本。
+Release packages start a local server and refresh generated data every 60 seconds. Node.js 18 or newer is currently required on the machine.
 
-## 数据刷新
+## Data Source
 
-本地服务会每 60 秒重新读取一次 Codex 会话日志，并生成 `data.js`。
-
-```bash
-npm start
-```
-
-如果你想让服务占用当前终端，方便看日志，可以运行：
-
-```bash
-npm run serve
-```
-
-停止服务：
-
-```bash
-npm run stop
-```
-
-## 数据来源
-
-默认读取本机目录：
+By default, codex-dashboard reads local Codex session files from:
 
 ```text
 ~/.codex/sessions
 ```
 
-看板只提取用量相关元数据，例如：
+It extracts usage-oriented metadata such as:
 
-- 时间
-- 模型
-- Token 数量
-- 会话和项目名称
-- 缓存命中
-- 失败记录
-- 额度窗口状态
+- timestamp
+- model
+- token counts
+- session and project names
+- cache hit data
+- failure records
+- quota window state
 
-## 隐私说明
+## Privacy Model
 
-codex看板是本地工具，不需要云端服务。下面这些文件可能包含你的真实本地使用信息，默认不会提交到 GitHub：
+This is a local utility. The files below may contain real local usage information and are intentionally ignored by Git:
 
 - `data.js`
 - `.codexscope-cache.json`
@@ -114,39 +96,40 @@ codex看板是本地工具，不需要云端服务。下面这些文件可能包
 - `.codexscope-server.pid`
 - `.env`
 
-如果你要公开仓库，请再次确认这些文件没有被提交。
+The checked-in `data.sample.js` file contains sample data only.
 
-## 常用命令
+## Commands
 
 ```bash
-npm start                 # 后台启动本地服务
-npm run stop              # 停止本地服务
-npm run serve             # 前台启动服务，适合调试
-npm run generate          # 手动生成 data.js
-npm run build:frontend    # 编译前端 TypeScript
+npm start                 # Start the local service in the background
+npm run stop              # Stop the local service
+npm run serve             # Run the local service in the current terminal
+npm run generate          # Generate data.js manually
+npm run build:frontend    # Compile frontend TypeScript
+npm run verify            # Build and run responsive UI checks
 ```
 
-## 项目结构
+## Project Structure
 
 ```text
-index.html                         页面入口
-app.ts / app.js                     看板逻辑
-styles.css                         基础样式
-styles-mac-console.css             macOS 风格定制层
-scripts/generate-codex-data.mjs    本地数据生成脚本
-scripts/serve-local.mjs            本地刷新服务
-scripts/start-local.mjs            后台启动脚本
-scripts/stop-local.mjs             停止服务脚本
-data.sample.js                     示例数据
+index.html                         Page entry
+app.ts / app.js                     Dashboard logic
+styles.css                         Base styles
+styles-mac-console.css             macOS visual layer
+scripts/generate-codex-data.mjs    Local data generator
+scripts/serve-local.mjs            Local refresh service
+scripts/start-local.mjs            Background start script
+scripts/stop-local.mjs             Stop script
+data.sample.js                     Sample data
 ```
 
-## 注意事项
+## Notes
 
-- 直接打开 `index.html` 可以预览页面，但不会自动刷新真实数据。
-- GitHub Pages 不能读取你本机的 Codex 日志，所以这个项目更适合本地运行。
-- 费用是按公开价格和本地 token 记录估算，实际账单仍以官方为准。
-- CNY 只是展示换算，原始估算币种是 USD。
+- Opening `index.html` directly can preview the UI, but live local data refresh requires the local service.
+- GitHub Pages cannot read local Codex logs, so this project is meant to run locally.
+- Cost values are estimates from public pricing and local token records. Official billing remains the source of truth.
+- CNY is display-only conversion; the underlying estimate is USD.
 
-## 来源
+## Origin
 
-本项目基于 [JUk1-GH/CodexScope](https://github.com/JUk1-GH/CodexScope) 做本地二次改造，当前版本已经定制为 `codex看板`。
+This project is based on [JUk1-GH/CodexScope](https://github.com/JUk1-GH/CodexScope) and has been adapted into a local-first `codex-dashboard` experience.
